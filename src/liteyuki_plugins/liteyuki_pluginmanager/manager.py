@@ -180,10 +180,10 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
                 if "Successfully installed" in result.splitlines()[-1]:
                     await install_plugin.send("插件：%s(%s)安装成功" % (_plugin["name"], _plugin["id"]))
                     suc = True
-                    installed_plugin.append(_plugin["id"].replace("_"))
+                    installed_plugin.append(_plugin["id"].replace("-", "_"))
                 elif "Requirement already satisfied" in result.splitlines()[-1]:
                     await install_plugin.send("已安装过%s(%s)，无法重复安装" % (_plugin["name"], _plugin["id"]))
-                    installed_plugin.append(_plugin["id"].replace("_"))
+                    installed_plugin.append(_plugin["id"].replace("-", "_"))
                 else:
                     await install_plugin.send("安装过程可能出现问题：%s" % result)
                 installed_plugin = list(set(installed_plugin))
@@ -231,7 +231,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
     plugin_bg_size = bg.get_actual_pixel_size("plugin_bg")
     for i, _plugin in enumerate(searched_plugin_data_list):
         rectangle = bg.plugin_bg.__dict__["plugin_bg_%s" % i] = Rectangle(uv_size=(1, 1), box_size=(1, line_high / plugin_bg_size[1]),
-                                                                          parent_point=(0.5, i*line_high/plugin_bg_size[1]), point=(0.5, 0),
+                                                                          parent_point=(0.5, i * line_high / plugin_bg_size[1]), point=(0.5, 0),
                                                                           fillet=0, color=(0, 0, 0, 128 if i % 2 == 0 else 0))
         installed = _plugin["id"].replace("-", "_") in loaded_plugin_id_list
         install_stats = "[已安装]" if installed else ""
@@ -244,6 +244,3 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
         )
 
     await online_plugin.send(MessageSegment.image(file="file:///%s" % await run_sync(bg.export_cache)()))
-
-
-

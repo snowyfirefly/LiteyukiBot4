@@ -1,8 +1,9 @@
 import time
 
-from bot import driver
-from ...liteyuki_api.data import *
+from nonebot import get_driver
 
+from ...liteyuki_api.data import *
+driver = get_driver()
 # 保存启动时间
 @driver.on_startup
 async def _():

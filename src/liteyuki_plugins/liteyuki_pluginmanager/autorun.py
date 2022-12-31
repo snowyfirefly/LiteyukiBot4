@@ -7,11 +7,10 @@ from nonebot.matcher import Matcher
 from nonebot.message import run_preprocessor
 from nonebot.typing import T_State
 from nonebot.utils import run_sync
-
-from bot import driver
+from nonebot import get_driver
 from .plugin_api import *
 from ...liteyuki_api.utils import download_file
-
+driver = get_driver()
 
 @run_preprocessor
 async def _(matcher: Matcher, bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], state: T_State):

@@ -18,6 +18,6 @@ plugins = []
 plugin_dirs = ["src/nonebot_plugins", "src/liteyuki_plugins"]
 
 [[tool.poetry.source]]
-name = "USTC"
-url = "https://pypi.mirrors.ustc.edu.cn/simple"
+name = "Tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
 default = true

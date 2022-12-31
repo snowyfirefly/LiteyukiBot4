@@ -1,13 +1,7 @@
-import os
-from typing import Union
 from nonebot.plugin import PluginMetadata
-from nonebot import on_command
-from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, PrivateMessageEvent, Bot
-from nonebot.params import CommandArg
-from nonebot.permission import SUPERUSER
-from nonebot.utils import run_sync
+from .autorun import *
+from .resource import *
 from .system import *
-from .resource import resource_git
 
 echo = on_command(cmd="echo", permission=SUPERUSER)
 liteyuki = on_command(cmd="liteyuki", permission=SUPERUSER)

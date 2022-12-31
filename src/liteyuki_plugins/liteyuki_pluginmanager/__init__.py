@@ -1,6 +1,5 @@
 from .manager import *
 from .autorun import *
-from nonebot import on_message
 from .resource import resource_git
 from nonebot.plugin.plugin import plugins, PluginMetadata
 

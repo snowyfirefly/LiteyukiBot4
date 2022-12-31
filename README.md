@@ -27,9 +27,10 @@
 ## 启动
 
 ### 首次启动配置
-- 1.Windows可以点击```run.cmd```来启动Bot<br>
+- 1.1.Windows可以使用```run.cmd```来启动Bot<br>
+- 1.2.Linux可以使用```run.sh```来启动Bot<br>
 - 2.在```bot.py```所在目录下用```python bot.py```命令启动<br>
-_注意：轻雪不支持```nb run```启动_
+_注意：轻雪不支持```nb run```启动，正常情况下脚本可以安装依赖项，若安装失败则请手动安装依赖```pip[3] install -r requirements.txt```_
 
 Bot第一次启动会在目录下生成```.env```和```pyproject.toml```，此时打开```.env```，按照提示修改以下项
 ```dotenv
@@ -46,7 +47,6 @@ PORT=11451# Bot端运行端口，必须和go-cqhttp端中配置的端口一致�
 
 - 上述网页若无法加载可使用github镜像<br>
 报错或其他问题请加群：775840726
-## 其他
 ### 声明
 - 轻雪Bot是一个非盈利，非商用的项目。
 - 轻雪内置了[nonebot_plugin_reboot](https://github.com/18870/nonebot-plugin-reboot) 插件，无法使用```nb run```启动，但是增加了便利性，在此对插件原作者表示感谢

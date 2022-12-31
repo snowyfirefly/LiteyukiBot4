@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import time
 import traceback
 from typing import Union
@@ -15,7 +16,6 @@ from nonebot import *
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent, Message, NoticeEvent, Bot
 from nonebot.permission import SUPERUSER
 import pickle
-from ...liteyuki_api.utils import simple_request
 
 check_update = on_command("检查更新", permission=SUPERUSER)
 set_auto_update = on_command("启用自动更新", aliases={"停用自动更新"}, permission=SUPERUSER)
@@ -23,6 +23,7 @@ update = on_command("#update", aliases={"#轻雪更新"}, permission=SUPERUSER)
 restart = on_command("#restart", aliases={"#轻雪重启"}, permission=SUPERUSER)
 export_database = on_command("#export", aliases={"#导出数据"}, permission=SUPERUSER)
 liteyuki_bot_info = on_command("#info", aliases={"#轻雪信息", "#轻雪状态"}, permission=SUPERUSER)
+clear_cache = on_command("#清除缓存", permission=SUPERUSER)
 
 data_importer = on_notice()
 
@@ -116,3 +117,31 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     for prop_name, prop_value in prop.items():
         msg += "\n%s: %s" % (prop_name, prop_value)
     await liteyuki_bot_info.send(msg)
+
+@clear_cache.handle()
+async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+    file_list = []
+
+    def get_all_file(_dir: str):
+        for _f in os.listdir(_dir):
+            wp = os.path.join(_dir, _f)
+            print(wp)
+            if os.path.isdir(wp):
+                get_all_file(wp)
+            else:
+                file_list.append(wp)
+
+    get_all_file(Path.cache)
+
+    if len(file_list) > 0:
+        size_int = 0
+        for f in file_list:
+            size_int += os.path.getsize(f)
+        size = size_text(size_int)
+        await run_sync(shutil.rmtree)(Path.cache)
+        await run_sync(os.makedirs)(Path.cache)
+        await clear_cache.send(message="缓存清除成功：%s" % size)
+    else:
+        if not os.path.exists(Path.cache):
+            os.makedirs(Path.cache)
+        await clear_cache.send(message="当前没有缓存")

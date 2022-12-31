@@ -42,6 +42,25 @@ def simple_request(url, **kwargs) -> Response:
     resp = requests.get(url, **kwargs)
     return resp
 
+def size_text(byte: int, dec: int = 2) -> str:
+    """
+    :param byte:
+    :param dec: 浮点位数
+    :return:
+    """
+    """1024转为1kb"""
+    if (size := byte / 1024 ** 4) > 1:
+        unit = "TB"
+    elif (size := byte / 1024 ** 3) > 1:
+        unit = "GB"
+    elif (size := byte / 1024 ** 2) > 1:
+        unit = "MB"
+    elif (size := byte / 1024 ** 1) > 1:
+        unit = "KB"
+    else:
+        unit = "B"
+    return "%s%s" % (round(size, dec), unit)
+
 
 class Command:
 

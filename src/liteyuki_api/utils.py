@@ -1,6 +1,6 @@
 import os
 import traceback
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 
 import nonebot
 import requests
@@ -42,6 +42,7 @@ def simple_request(url, **kwargs) -> Response:
     resp = requests.get(url, **kwargs)
     return resp
 
+
 def size_text(byte: int, dec: int = 2) -> str:
     """
     :param byte:
@@ -62,6 +63,33 @@ def size_text(byte: int, dec: int = 2) -> str:
     return "%s%s" % (round(size, dec), unit)
 
 
+def time_format_list(seconds: int) -> list:
+    times = []
+    secs = [31104000, 2592000, 86400, 3600, 60, 1]
+    for sec in secs:
+        times.append(seconds//sec)
+        seconds = seconds % sec
+    return times
+
+def time_format_text_by_sec(seconds) -> str:
+    """
+    时长文本： 3年4个月5天12小时32分12秒
+
+    :param seconds
+    :return:
+    """
+    time_list = time_format_list(seconds)
+    text = ""
+    show = False
+    units = [
+        "年", "个月", "日", "时", "分", "秒"
+    ]
+    for value, unit in zip(time_list, units):
+        if value > 0:
+            show = True
+        if show:
+            text += "%s%s" % (value, unit)
+    return text
 class Command:
 
     @staticmethod

@@ -1,19 +1,23 @@
+import datetime
 import json
 import os
+import random
 import shutil
 import time
 import traceback
 from typing import Union
 
+from PIL import Image
 from nonebot.params import CommandArg
 from nonebot.typing import T_State
 from nonebot.utils import run_sync
 from .utils import *
+from ...liteyuki_api.canvas import *
 from ...liteyuki_api.config import *
 from ...liteyuki_api.data import LiteyukiDB
 from ...liteyuki_api.utils import *
 from nonebot import *
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent, Message, NoticeEvent, Bot
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent, Message, NoticeEvent, Bot, MessageSegment
 from nonebot.permission import SUPERUSER
 import pickle
 
@@ -24,6 +28,7 @@ restart = on_command("#restart", aliases={"#轻雪重启"}, permission=SUPERUSER
 export_database = on_command("#export", aliases={"#导出数据"}, permission=SUPERUSER)
 liteyuki_bot_info = on_command("#info", aliases={"#轻雪信息", "#轻雪状态"}, permission=SUPERUSER)
 clear_cache = on_command("#清除缓存", permission=SUPERUSER)
+self_destroy = on_command("#轻雪自毁", permission=SUPERUSER)
 
 data_importer = on_notice()
 
@@ -101,23 +106,63 @@ async def _(bot: Bot, event: NoticeEvent, state: T_State):
                 await bot.send_private_msg(user_id=eventData.get("user_id"), message="数据库合并完成")
 
 
+# 轻雪状态
 @liteyuki_bot_info.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     msg = "轻雪状态："
     stats = await bot.call_api("get_status")
-    print(json.dumps(stats, indent=4))
-    prop = {
-        "Bot昵称": "、".join(bot.config.nickname if len(bot.config.nickname) else ["Bot还没有名字哦"]),
-        "状态": "在线" if stats.get("online") else "离线",
-        "群聊数": len(await bot.get_group_list()),
-        "好友数": len(await bot.get_friend_list()),
-        "收/发消息数": "%s/%s" % (stats.get("stat").get("message_received"), stats.get("stat").get("message_sent")),
-        "收/发数据包数": "%s/%s" % (stats.get("stat").get("packet_received"), stats.get("stat").get("packet_sent"))
-    }
-    for prop_name, prop_value in prop.items():
-        msg += "\n%s: %s" % (prop_name, prop_value)
-    await liteyuki_bot_info.send(msg)
+    prop_list = [
+        {
+            "Bot昵称": "、".join(bot.config.nickname if len(bot.config.nickname) else ["Bot还没有名字哦"]),
+            "状态": "在线" if stats.get("online") else "离线",
+            "群聊数": len(await bot.get_group_list()),
+            "好友数": len(await bot.get_friend_list()),
+            "收/发消息数": "%s/%s" % (stats.get("stat").get("message_received"), stats.get("stat").get("message_sent")),
+            "收/发数据包数": "%s/%s" % (stats.get("stat").get("packet_received"), stats.get("stat").get("packet_sent"))
+        }
+    ]
+    drawing_path = os.path.join(Path.data, "liteyuki/drawing")
+    head_high = 350
+    hardware_high = 640
+    width = 1080
+    side = 20
+    if len(drawing_path) > 0:
+        base_img = await run_sync(Utils.central_clip_by_ratio)(Image.open(os.path.join(Path.data, "liteyuki/drawing/%s" % random.choice(os.listdir(drawing_path)))), (width, 2000))
+    else:
+        base_img = Image.new(mode="RGBA", size=(width, 2000), color=(255, 255, 255, 255))
+    info_canvas = Canvas(base_img)
+    info_canvas.content = Panel(
+        uv_size=info_canvas.base_img.size,
+        box_size=(info_canvas.base_img.size[0] - 2 * side, info_canvas.base_img.size[1] - 2 * side),
+        parent_point=(0.5, 0.5), point=(0.5, 0.5)
+    )
+    content_size = info_canvas.get_actual_pixel_size("content")
+    print(content_size)
+    info_canvas.content.head = Rectangle(
+        uv_size=(1, content_size[1]), box_size=(1, head_high),
+        parent_point=(0.5, 0), point=(0.5, 0), fillet=0.05, color=(0, 0, 0, 80)
+    )
+    user_icon_path = os.path.join(Path.cache, "u%s.png" % bot.self_id)
+    await run_sync(download_file)("http://q1.qlogo.cn/g?b=qq&nk=%s&s=640" % bot.self_id, user_icon_path)
+    head_size = info_canvas.get_actual_pixel_size("content.head")
+    info_canvas.content.head.icon = Img(
+        uv_size=(1, 1), box_size=(0.75, 0.75), parent_point=(min(head_size) / 2 / max(head_size), 0.5), point=(0.5, 0.5),
+        img=await run_sync(Utils.circular_clip)(Image.open(user_icon_path))
+    )
+    icon_pos = info_canvas.get_parent_box("content.head.icon")
+    info_canvas.content.head.nickname = Text(
+        uv_size=(1, 1), box_size=(0.75, 0.25), parent_point=(icon_pos[2] + 0.05, 0.45), point=(0, 1),
+        text=list(bot.config.nickname)[0]
+    )
+    nickname_pos = info_canvas.get_parent_box("content.head.nickname")
+    await run_sync(info_canvas.draw_line)("content.head", (nickname_pos[0], nickname_pos[3] + 0.05), (nickname_pos[2], nickname_pos[3] + 0.05), (80, 80, 80, 255), width=5)
+    for prop in prop_list:
+        for prop_name, prop_value in prop.items():
+            msg += "\n%s: %s" % (prop_name, prop_value)
+    await liteyuki_bot_info.send(MessageSegment.image(file="file:///%s" % await run_sync(info_canvas.export_cache)()))
 
+
+# 清除缓存
 @clear_cache.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     file_list = []
@@ -125,7 +170,6 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     def get_all_file(_dir: str):
         for _f in os.listdir(_dir):
             wp = os.path.join(_dir, _f)
-            print(wp)
             if os.path.isdir(wp):
                 get_all_file(wp)
             else:
@@ -145,3 +189,9 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         if not os.path.exists(Path.cache):
             os.makedirs(Path.cache)
         await clear_cache.send(message="当前没有缓存")
+
+
+# 你在尝试一种很新的玩法
+@self_destroy.handle()
+async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+    pass

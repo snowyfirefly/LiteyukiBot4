@@ -446,3 +446,65 @@ class Graphical:
             r = fillet
         draw.rounded_rectangle(xy=(0, 0, size[0], size[1]), radius=r, fill=color, width=outline_width, outline=outline_color)
         return base
+
+
+class Utils:
+
+    @staticmethod
+    def central_clip_by_ratio(img: Image.Image, size: Tuple):
+        """
+        :param img:
+        :param size: 仅为比例，满填充裁剪
+        :return:
+        """
+        img_ratio = img.size[0] / img.size[1]
+        limited_ratio = size[0] / size[1]
+        if limited_ratio > img_ratio:
+            actual_size = (
+                img.size[0],
+                img.size[0] / size[0] * size[1]
+            )
+            box = (
+                0, (img.size[1] - actual_size[1]) // 2,
+                img.size[0], img.size[1] - (img.size[1] - actual_size[1]) // 2
+            )
+        else:
+            actual_size = (
+                img.size[1] / size[1] * size[0],
+                img.size[1],
+            )
+            box = (
+                (img.size[0] - actual_size[0]) // 2, 0,
+                img.size[0] - (img.size[0] - actual_size[0]) // 2, img.size[1]
+            )
+        img = img.crop(box).resize(size)
+        return img
+
+    @staticmethod
+    def circular_clip(img: Image.Image):
+        """
+        裁剪为alpha圆形
+
+        :param img:
+        :return:
+        """
+        length = min(img.size)
+        radius = length // 2
+        alpha_cover = Image.new("RGBA", (length, length), color=(0, 0, 0, 0))
+        if img.size[0] > img.size[1]:
+            box = (
+                (img.size[0] - img[1]) // 2, 0,
+                (img.size[0] - img[1]) // 2 + img.size[1], img.size[1]
+            )
+        else:
+            box = (
+                0, (img.size[1] - img.size[0]) // 2,
+                img.size[0], (img.size[1] - img.size[0]) // 2 + img.size[0]
+            )
+        img = img.crop(box).resize((length, length))
+        draw = ImageDraw.Draw(alpha_cover)
+        draw.ellipse(xy=(0, 0, length, length), fill=(255, 255, 255, 255))
+        alpha = alpha_cover.split()[-1]
+        img.putalpha(alpha)
+        return img
+

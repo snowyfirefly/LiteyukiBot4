@@ -46,6 +46,9 @@ PORT=11451# Bot端运行端口，必须和go-cqhttp端中配置的端口一致�
 
 - 上述网页若无法加载可使用github镜像<br>
 报错或其他问题请加群：775840726
+## 其他
+### 非必要自定义项
+- 立绘：Bot的立绘图，在一些内置插件中起装饰作用，可以给Bot发送```添加立绘[图片]```，也可手动将png图片文件放入```src/data/liteyuki/drawing```
 ### 声明
 - 轻雪Bot是一个非盈利，非商用的项目。
 - 轻雪内置了[nonebot_plugin_reboot](https://github.com/18870/nonebot-plugin-reboot) 插件，无法使用```nb run```启动，但是增加了便利性，在此对插件原作者表示感谢

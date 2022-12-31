@@ -15,7 +15,7 @@ from ...liteyuki_api.config import Path
 from ...liteyuki_api.data import Data
 from ...liteyuki_api.utils import Command
 
-user_card = on_command(cmd="面板", aliases={"原神数据", "更新面板", "更新数据", "#更新面板"})
+user_card = on_command(cmd="面板更新", aliases={"原神数据", "更新面板", "更新数据", "#更新面板"})
 
 
 @user_card.handle()

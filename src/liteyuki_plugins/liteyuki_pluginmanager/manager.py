@@ -238,12 +238,6 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
         )
 
     await online_plugin.send(MessageSegment.image(file="file:///%s" % await run_sync(bg.export_cache)()))
-    # msg += "%s%s%s(%s)" % ("•" if times == 0 else "\n•", ("[已安装]" if _plugin["id"] in loaded_plugin_id_list else ""), _plugin["name"], _plugin["id"])
-    # times += 1
-    # if times == 30 or i == len(searched_plugin_data_list) - 1:
-    #     times = 0
-    #     await online_plugin.send(msg)
-    #     msg = ""
 
 
 

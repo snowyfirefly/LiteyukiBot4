@@ -13,10 +13,6 @@ pymongo = "^4.3.3"
 pillow = "^9.3.0"
 aiohttp = "^3.8.3"
 
-[tool.nonebot]
-plugins = []
-plugin_dirs = ["src/nonebot_plugins", "src/liteyuki_plugins"]
-
 [[tool.poetry.source]]
 name = "Tsinghua"
 url = "https://pypi.tuna.tsinghua.edu.cn/simple/"

@@ -153,7 +153,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     width = 1080
     side = 20
     high = side * 2 + block_distance * 3 + head_high + hardware_high
-    if len(drawing_path) > 0:
+    if len(os.listdir(drawing_path)) > 0:
         base_img = await run_sync(Utils.central_clip_by_ratio)(Image.open(os.path.join(Path.data, "liteyuki/drawing/%s" % random.choice(os.listdir(drawing_path)))), (width, high))
     else:
         base_img = Image.new(mode="RGBA", size=(width, high), color=(255, 255, 255, 255))

@@ -29,8 +29,7 @@
 ### 首次启动配置
 - 1.1.Windows可以使用```run.cmd```来启动Bot<br>
 - 1.2.Linux可以使用```run.sh```来启动Bot<br>
-- 2.在```bot.py```所在目录下用```python bot.py```命令启动<br>
-_注意：轻雪不支持```nb run```启动，正常情况下脚本可以安装依赖项，若安装失败则请手动安装依赖```pip[3] install -r requirements.txt```_
+- 2.先安装poetry，再执行```poetry install```在```bot.py```所在目录下用```python bot.py```命令启动<br>
 
 Bot第一次启动会在目录下生成```.env```和```pyproject.toml```，此时打开```.env```，按照提示修改以下项
 ```dotenv

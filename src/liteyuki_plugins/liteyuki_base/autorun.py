@@ -1,7 +1,7 @@
 import time
 
-from nonebot import get_driver
-
+from nonebot import get_driver, get_bots
+from nonebot import get_bot
 from ...liteyuki_api.data import *
 driver = get_driver()
 # 保存启动时间

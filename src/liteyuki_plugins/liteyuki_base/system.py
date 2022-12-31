@@ -14,7 +14,7 @@ from nonebot.utils import run_sync
 from .utils import *
 from ...liteyuki_api.canvas import *
 from ...liteyuki_api.config import *
-from ...liteyuki_api.data import LiteyukiDB
+from ...liteyuki_api.data import LiteyukiDB, Data
 from ...liteyuki_api.utils import *
 from nonebot import *
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent, Message, NoticeEvent, Bot, MessageSegment
@@ -109,16 +109,23 @@ async def _(bot: Bot, event: NoticeEvent, state: T_State):
 # 轻雪状态
 @liteyuki_bot_info.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+    if len(bot.config.nickname) == 0:
+        bot.config.nickname.add("轻雪")
     msg = "轻雪状态："
     stats = await bot.call_api("get_status")
+    delta_time = datetime.datetime.now() - datetime.datetime.strptime("%s-%s-%s-%s-%s-%s" % tuple(Data(Data.globals, "liteyuki").get_data("start_time", tuple(time.localtime())[0:6])), "%Y-%m-%d-%H-%M-%S")
+    delta_sec = delta_time.days * 24 * 60 * 60 + delta_time.seconds
     prop_list = [
         {
-            "Bot昵称": "、".join(bot.config.nickname if len(bot.config.nickname) else ["Bot还没有名字哦"]),
             "状态": "在线" if stats.get("online") else "离线",
             "群聊数": len(await bot.get_group_list()),
             "好友数": len(await bot.get_friend_list()),
+
+        },
+        {
             "收/发消息数": "%s/%s" % (stats.get("stat").get("message_received"), stats.get("stat").get("message_sent")),
-            "收/发数据包数": "%s/%s" % (stats.get("stat").get("packet_received"), stats.get("stat").get("packet_sent"))
+            "收/发数据包数": "%s/%s" % (stats.get("stat").get("packet_received"), stats.get("stat").get("packet_sent")),
+            "运行时间": time_format_text_by_sec(delta_sec)
         }
     ]
     drawing_path = os.path.join(Path.data, "liteyuki/drawing")
@@ -151,14 +158,17 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     )
     icon_pos = info_canvas.get_parent_box("content.head.icon")
     info_canvas.content.head.nickname = Text(
-        uv_size=(1, 1), box_size=(0.75, 0.25), parent_point=(icon_pos[2] + 0.05, 0.45), point=(0, 1),
+        uv_size=(1, 1), box_size=(0.75, 0.25), parent_point=(icon_pos[2] + 0.05, 0.4), point=(0, 1),
         text=list(bot.config.nickname)[0]
     )
     nickname_pos = info_canvas.get_parent_box("content.head.nickname")
-    await run_sync(info_canvas.draw_line)("content.head", (nickname_pos[0], nickname_pos[3] + 0.05), (nickname_pos[2], nickname_pos[3] + 0.05), (80, 80, 80, 255), width=5)
-    for prop in prop_list:
+    await run_sync(info_canvas.draw_line)("content.head", (nickname_pos[0], nickname_pos[3] + 0.05), (nickname_pos[2], nickname_pos[3] + 0.05), (192, 192, 192, 255), width=5)
+    for i, prop in enumerate(prop_list):
+        i2 = 0
         for prop_name, prop_value in prop.items():
-            msg += "\n%s: %s" % (prop_name, prop_value)
+
+
+            i2 += 1
     await liteyuki_bot_info.send(MessageSegment.image(file="file:///%s" % await run_sync(info_canvas.export_cache)()))
 
 

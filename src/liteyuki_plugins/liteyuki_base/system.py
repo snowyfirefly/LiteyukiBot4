@@ -114,8 +114,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     if len(bot.config.nickname) == 0:
         bot.config.nickname.add("轻雪")
     msg = "轻雪状态："
-    stats = await bot.call_api("get_status")
-    version_info = await bot.call_api("get_version_info")
+    stats = await bot.get_status()
+    version_info = await bot.get_version_info()
     protocol_dict = {
         -1: "",
         0: "iPad",
@@ -128,12 +128,12 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     delta_time = datetime.datetime.now() - datetime.datetime.strptime("%s-%s-%s-%s-%s-%s" % tuple(Data(Data.globals, "liteyuki").get_data("start_time", tuple(time.localtime())[0:6])),
                                                                       "%Y-%m-%d-%H-%M-%S")
     delta_sec = delta_time.days * 24 * 60 * 60 + delta_time.seconds
-
+    print(json.dumps(stats, indent=4))
     prop_list = [
         [
             "%s%s" % (protocol_dict.get(version_info["protocol"], ""), "在线" if stats.get("online") else "离线"),
             "群聊 %s" % len(await bot.get_group_list()),
-            "好友 %s" % len(await bot.get_friend_list()),
+            "好友 %s" % len(await bot.get_friend_list())
 
         ],
         [
@@ -142,7 +142,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         ],
         [
             "轻雪版本 %s" % config_data["version_name"],
-            "适配器版本 %s" % version_info["app_version"]
+            "适配器 %s" % version_info["app_version"]
         ]
     ]
     drawing_path = os.path.join(Path.data, "liteyuki/drawing")
@@ -179,7 +179,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     icon_pos = info_canvas.get_parent_box("content.head.icon")
     info_canvas.content.head.nickname = Text(
         uv_size=(1, 1), box_size=(0.75, 0.25), parent_point=(icon_pos[2] + 0.05, 0.4), point=(0, 1),
-        text=list(bot.config.nickname)[0]
+        text=(await bot.get_login_info())["nickname"]
     )
     nickname_pos = info_canvas.get_parent_box("content.head.nickname")
     await run_sync(info_canvas.draw_line)("content.head", (nickname_pos[0], nickname_pos[3] + 0.05), (nickname_pos[2], nickname_pos[3] + 0.05), (255, 255, 255, 255), width=5)
@@ -210,6 +210,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         {
             "name": "RAM",
             "percent": psutil.virtual_memory().used / psutil.virtual_memory().total * 100,
+            "percent2": psutil.Process(os.getpid()).memory_info().rss / psutil.virtual_memory().total * 100,
             "sub_prop": [
                 "Bot %s" % size_text(psutil.Process(os.getpid()).memory_info().rss),
                 "已用 %s" % size_text(psutil.virtual_memory().used),
@@ -219,8 +220,10 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         }
     ]
     for part_i, sub_part in enumerate(hardware_part):
-        if sub_part["percent"] < 60:
+        if sub_part["percent"] < 40:
             arc_color = (0, 255, 0, 255)
+        elif sub_part["percent"] < 60:
+            arc_color = (255, 255, 255, 255)
         elif sub_part["percent"] < 80:
             arc_color = arc_color = Color.hex2dec("FFFFEE00")
         else:

@@ -113,7 +113,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         bot.config.nickname.add("轻雪")
     msg = "轻雪状态："
     stats = await bot.call_api("get_status")
-    delta_time = datetime.datetime.now() - datetime.datetime.strptime("%s-%s-%s-%s-%s-%s" % tuple(Data(Data.globals, "liteyuki").get_data("start_time", tuple(time.localtime())[0:6])), "%Y-%m-%d-%H-%M-%S")
+    delta_time = datetime.datetime.now() - datetime.datetime.strptime("%s-%s-%s-%s-%s-%s" % tuple(Data(Data.globals, "liteyuki").get_data("start_time", tuple(time.localtime())[0:6])),
+                                                                      "%Y-%m-%d-%H-%M-%S")
     delta_sec = delta_time.days * 24 * 60 * 60 + delta_time.seconds
     prop_list = [
         {
@@ -123,8 +124,11 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
         },
         {
-            "收/发消息数": "%s/%s" % (stats.get("stat").get("message_received"), stats.get("stat").get("message_sent")),
-            "收/发数据包数": "%s/%s" % (stats.get("stat").get("packet_received"), stats.get("stat").get("packet_sent")),
+            "收": stats.get("stat").get("message_received"),
+            "发": stats.get("stat").get("message_sent"),
+            "运行时间": time_format_text_by_sec(delta_sec)
+        },
+        {
             "运行时间": time_format_text_by_sec(delta_sec)
         }
     ]
@@ -147,7 +151,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     print(content_size)
     info_canvas.content.head = Rectangle(
         uv_size=(1, content_size[1]), box_size=(1, head_high),
-        parent_point=(0.5, 0), point=(0.5, 0), fillet=0.05, color=(0, 0, 0, 80)
+        parent_point=(0.5, 0), point=(0.5, 0), fillet=0.05, color=(0, 0, 0, 128)
     )
     user_icon_path = os.path.join(Path.cache, "u%s.png" % bot.self_id)
     await run_sync(download_file)("http://q1.qlogo.cn/g?b=qq&nk=%s&s=640" % bot.self_id, user_icon_path)
@@ -162,13 +166,16 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         text=list(bot.config.nickname)[0]
     )
     nickname_pos = info_canvas.get_parent_box("content.head.nickname")
-    await run_sync(info_canvas.draw_line)("content.head", (nickname_pos[0], nickname_pos[3] + 0.05), (nickname_pos[2], nickname_pos[3] + 0.05), (192, 192, 192, 255), width=5)
+    await run_sync(info_canvas.draw_line)("content.head", (nickname_pos[0], nickname_pos[3] + 0.05), (nickname_pos[2], nickname_pos[3] + 0.05), (210, 210, 210, 255), width=5)
     for i, prop in enumerate(prop_list):
-        i2 = 0
+        prop_text_list = []
         for prop_name, prop_value in prop.items():
-
-
-            i2 += 1
+            prop_text_list.append(TextSegment("%s %s" % (prop_name, prop_value), color=(240, 240, 240, 255)))
+            prop_text_list.append(TextSegment(" | ", color=(168, 168, 168, 255)))
+        del prop_text_list[-1]
+        info_canvas.content.head.__dict__["label_%s" % i] = Text(
+            uv_size=(1, 1), box_size=(0.6, 0.1), parent_point=(nickname_pos[0], nickname_pos[3] + 0.08 + 0.16 * i), point=(0, 0), text=prop_text_list, force_size=True
+        )
     await liteyuki_bot_info.send(MessageSegment.image(file="file:///%s" % await run_sync(info_canvas.export_cache)()))
 
 

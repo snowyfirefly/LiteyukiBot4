@@ -6,9 +6,7 @@ from .config import config_data, Path
 import pymongo
 import sqlite3
 LiteyukiDB = pymongo.MongoClient(config_data["mongodb"])["liteyuki"]
-LiteyukiDB_sql = sqlite3.connect(os.path.join(Path.data, "liteyuki.db"))
 nonebot.logger.info("已连接到数据库：%s" % config_data["mongodb"])
-
 
 class Data:
     users = "users"

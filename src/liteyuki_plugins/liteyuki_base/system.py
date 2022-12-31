@@ -1,12 +1,14 @@
 import datetime
 import json
 import os
+import platform
 import random
 import shutil
 import time
 import traceback
 from typing import Union
 
+import psutil
 from PIL import Image
 from nonebot.params import CommandArg
 from nonebot.typing import T_State
@@ -80,8 +82,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         f.close()
 
     await run_sync(export)()
-    datetime = "%s-%s-%s-%s-%s-%s" % tuple(time.localtime())[0:6]
-    await bot.call_api("upload_private_file", user_id=event.user_id, file=f_path, name="liteyuki_%s.db" % datetime)
+    _datetime = "%s-%s-%s-%s-%s-%s" % tuple(time.localtime())[0:6]
+    await bot.call_api("upload_private_file", user_id=event.user_id, file=f_path, name="liteyuki_%s.db" % _datetime)
 
 
 @data_importer.handle()
@@ -113,34 +115,48 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         bot.config.nickname.add("轻雪")
     msg = "轻雪状态："
     stats = await bot.call_api("get_status")
+    version_info = await bot.call_api("get_version_info")
+    protocol_dict = {
+        -1: "",
+        0: "iPad",
+        1: "Android",
+        2: "手表",
+        3: "MacOS",
+        4: "企点",
+        5: "iPad"
+    }
     delta_time = datetime.datetime.now() - datetime.datetime.strptime("%s-%s-%s-%s-%s-%s" % tuple(Data(Data.globals, "liteyuki").get_data("start_time", tuple(time.localtime())[0:6])),
                                                                       "%Y-%m-%d-%H-%M-%S")
     delta_sec = delta_time.days * 24 * 60 * 60 + delta_time.seconds
-    prop_list = [
-        {
-            "状态": "在线" if stats.get("online") else "离线",
-            "群聊数": len(await bot.get_group_list()),
-            "好友数": len(await bot.get_friend_list()),
 
-        },
-        {
-            "收": stats.get("stat").get("message_received"),
-            "发": stats.get("stat").get("message_sent"),
-            "运行时间": time_format_text_by_sec(delta_sec)
-        },
-        {
-            "运行时间": time_format_text_by_sec(delta_sec)
-        }
+    prop_list = [
+        [
+            "%s%s" % (protocol_dict.get(version_info["protocol"], ""), "在线" if stats.get("online") else "离线"),
+            "群聊 %s" % len(await bot.get_group_list()),
+            "好友 %s" % len(await bot.get_friend_list()),
+
+        ],
+        [
+            "接收 %s 发送 %s" % (stats.get("stat").get("message_received"), stats.get("stat").get("message_sent")),
+            "运行时间 %s" % time_format_text_by_sec(delta_sec)
+        ],
+        [
+            "轻雪版本 %s" % config_data["version_name"],
+            "适配器版本 %s" % version_info["app_version"]
+        ]
     ]
     drawing_path = os.path.join(Path.data, "liteyuki/drawing")
     head_high = 350
     hardware_high = 640
+    block_distance = 20
+    block_alpha = 168
     width = 1080
     side = 20
+    high = side * 2 + block_distance * 3 + head_high + hardware_high
     if len(drawing_path) > 0:
-        base_img = await run_sync(Utils.central_clip_by_ratio)(Image.open(os.path.join(Path.data, "liteyuki/drawing/%s" % random.choice(os.listdir(drawing_path)))), (width, 2000))
+        base_img = await run_sync(Utils.central_clip_by_ratio)(Image.open(os.path.join(Path.data, "liteyuki/drawing/%s" % random.choice(os.listdir(drawing_path)))), (width, high))
     else:
-        base_img = Image.new(mode="RGBA", size=(width, 2000), color=(255, 255, 255, 255))
+        base_img = Image.new(mode="RGBA", size=(width, high), color=(255, 255, 255, 255))
     info_canvas = Canvas(base_img)
     info_canvas.content = Panel(
         uv_size=info_canvas.base_img.size,
@@ -148,10 +164,10 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         parent_point=(0.5, 0.5), point=(0.5, 0.5)
     )
     content_size = info_canvas.get_actual_pixel_size("content")
-    print(content_size)
+    """head block"""
     info_canvas.content.head = Rectangle(
         uv_size=(1, content_size[1]), box_size=(1, head_high),
-        parent_point=(0.5, 0), point=(0.5, 0), fillet=0.05, color=(0, 0, 0, 128)
+        parent_point=(0.5, 0), point=(0.5, 0), fillet=20, color=(0, 0, 0, block_alpha)
     )
     user_icon_path = os.path.join(Path.cache, "u%s.png" % bot.self_id)
     await run_sync(download_file)("http://q1.qlogo.cn/g?b=qq&nk=%s&s=640" % bot.self_id, user_icon_path)
@@ -166,16 +182,71 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         text=list(bot.config.nickname)[0]
     )
     nickname_pos = info_canvas.get_parent_box("content.head.nickname")
-    await run_sync(info_canvas.draw_line)("content.head", (nickname_pos[0], nickname_pos[3] + 0.05), (nickname_pos[2], nickname_pos[3] + 0.05), (210, 210, 210, 255), width=5)
-    for i, prop in enumerate(prop_list):
+    await run_sync(info_canvas.draw_line)("content.head", (nickname_pos[0], nickname_pos[3] + 0.05), (nickname_pos[2], nickname_pos[3] + 0.05), (255, 255, 255, 255), width=5)
+    for i, prop_sub_list in enumerate(prop_list):
         prop_text_list = []
-        for prop_name, prop_value in prop.items():
-            prop_text_list.append(TextSegment("%s %s" % (prop_name, prop_value), color=(240, 240, 240, 255)))
+        for prop_str in prop_sub_list:
+            prop_text_list.append(TextSegment(prop_str, color=(240, 240, 240, 255)))
             prop_text_list.append(TextSegment(" | ", color=(168, 168, 168, 255)))
         del prop_text_list[-1]
         info_canvas.content.head.__dict__["label_%s" % i] = Text(
             uv_size=(1, 1), box_size=(0.6, 0.1), parent_point=(nickname_pos[0], nickname_pos[3] + 0.08 + 0.16 * i), point=(0, 0), text=prop_text_list, force_size=True
         )
+    """hardware block"""
+    hardware = info_canvas.content.hardware = Rectangle(
+        uv_size=(1, content_size[1]), box_size=(1, hardware_high),
+        parent_point=(0.5, (head_high + block_distance) / content_size[1]), point=(0.5, 0), fillet=20, color=(0, 0, 0, block_alpha)
+    )
+    hardware_part = [
+        {
+            "name": "CPU",
+            "percent": sum(psutil.cpu_percent(percpu=True)),
+            "sub_prop": [
+                "物理核心 %s" % psutil.cpu_count(logical=False),
+                "逻辑处理器 %s" % psutil.cpu_count(),
+                "%sMhz" % average(psutil.cpu_freq())
+            ]
+        },
+        {
+            "name": "RAM",
+            "percent": psutil.virtual_memory().used / psutil.virtual_memory().total * 100,
+            "sub_prop": [
+                "Bot %s" % size_text(psutil.Process(os.getpid()).memory_info().rss),
+                "已用 %s" % size_text(psutil.virtual_memory().used),
+                "剩余 %s" % size_text(psutil.virtual_memory().free),
+                "总计 %s" % size_text(psutil.virtual_memory().total)
+            ]
+        }
+    ]
+    for part_i, sub_part in enumerate(hardware_part):
+        if sub_part["percent"] < 60:
+            arc_color = (0, 255, 0, 255)
+        elif sub_part["percent"] < 80:
+            arc_color = arc_color = Color.hex2dec("FFFFEE00")
+        else:
+            arc_color = (255, 0, 0, 255)
+        point_x = (part_i * 2 + 1) / (len(hardware_part) * 2)
+        arc_bg = Graphical.arc(160, 0, 360, width=40, color=(192, 192, 192, 192))
+        arc_up = Graphical.arc(160, 0, 360 * sub_part["percent"] / 100, width=40, color=arc_color)
+
+        part = hardware.__dict__["part_%s" % part_i] = Panel(
+            uv_size=(1, 1), box_size=(1 / len(hardware_part), 1), parent_point=(point_x, 0.4), point=(0.5, 0.5)
+        )
+        part.arc_bg = Img(uv_size=(1, 1), box_size=(0.6, 0.5), parent_point=(0.5, 0.4), point=(0.5, 0.5), img=arc_bg)
+
+        part.arc_bg.arc_up = Img(uv_size=(1, 1), box_size=(1, 1), parent_point=(0.5, 0.5), point=(0.5, 0.5), img=arc_up)
+        part.arc_bg.percent_text = Text(
+            uv_size=(1, 1), box_size=(0.4, 0.2), parent_point=(0.5, 0.5), point=(0.5, 0.5), text="%.1f" % sub_part["percent"] + "%", force_size=True
+        )
+        arc_pos = info_canvas.get_parent_box("content.hardware.part_%s.arc_bg" % part_i)
+        part.name = Text(uv_size=(1, 1), box_size=(1, 0.08), parent_point=(0.5, arc_pos[3] + 0.03), point=(0.5, 0), text=sub_part["name"], force_size=True)
+        last_pos = info_canvas.get_parent_box("content.hardware.part_%s.name" % part_i)
+        for sub_prop_i, sub_prop in enumerate(sub_part["sub_prop"]):
+            part.__dict__["sub_prop_%s" % sub_prop_i] = Text(
+                uv_size=(1, 1), box_size=(1, 0.05), parent_point=(0.5, last_pos[3] + 0.02), point=(0.5, 0), text=sub_prop, force_size=True, color=(192, 192, 192, 255)
+            )
+            last_pos = info_canvas.get_parent_box("content.hardware.part_%s.sub_prop_%s" % (part_i, sub_prop_i))
+
     await liteyuki_bot_info.send(MessageSegment.image(file="file:///%s" % await run_sync(info_canvas.export_cache)()))
 
 

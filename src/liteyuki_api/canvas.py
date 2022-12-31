@@ -211,6 +211,8 @@ class Panel(BasePanel):
 
 class TextSegment:
     def __init__(self, text, **kwargs):
+        if not isinstance(text, str):
+            raise TypeError("请输入字符串")
         self.text = text
         self.color = kwargs.get("color", None)
         self.font = kwargs.get("font", None)
@@ -294,7 +296,7 @@ class Text(BasePanel):
                 if text_segment.font is None:
                     text_segment.font = self.font
                 image_font = ImageFont.truetype(font=text_segment.font, size=font_size)
-                draw.text(start_point, text_segment.text, text_segment.color, font=image_font)
+                draw.text(start_point, text_segment.text, text_segment.color, font=image_font, anchor="la")
                 text_width = image_font.getsize(text_segment.text)
                 start_point[0] += text_width[0]
 
@@ -447,6 +449,13 @@ class Graphical:
         draw.rounded_rectangle(xy=(0, 0, size[0], size[1]), radius=r, fill=color, width=outline_width, outline=outline_color)
         return base
 
+    @staticmethod
+    def arc(radius: int, start, end, color=(255, 255, 255, 255), width=1) -> Image.Image:
+        img = Image.new("RGBA", (2 * radius, 2 * radius), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
+        draw.arc(xy=(0, 0, img.size[0], img.size[1]), start=start, end=end, fill=color, width=width)
+        return img
+
 
 class Utils:
 
@@ -507,4 +516,3 @@ class Utils:
         alpha = alpha_cover.split()[-1]
         img.putalpha(alpha)
         return img
-

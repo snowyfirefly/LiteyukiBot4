@@ -166,6 +166,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
     args = str(arg).strip().split()
     suc = False
+    installed_plugin = Data(Data.globals, "liteyuki").get_data("install_plugin", [])
+
     for plugin_name in args:
         try:
             _plugins = await run_sync(search_plugin_info_online)(plugin_name)
@@ -174,14 +176,18 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
             else:
                 _plugin = _plugins[0]
                 await install_plugin.send("正在尝试安装插件：%s(%s)" % (_plugin["name"], _plugin["id"]))
-                result = (await run_sync(os.popen)("nb plugin install %s" % _plugin["id"])).read()
+                result = (await run_sync(os.popen)("pip install %s" % _plugin["id"])).read()
                 if "Successfully installed" in result.splitlines()[-1]:
                     await install_plugin.send("插件：%s(%s)安装成功" % (_plugin["name"], _plugin["id"]))
                     suc = True
+                    installed_plugin.append(_plugin["id"].replace("_"))
                 elif "Requirement already satisfied" in result.splitlines()[-1]:
                     await install_plugin.send("已安装过%s(%s)，无法重复安装" % (_plugin["name"], _plugin["id"]))
+                    installed_plugin.append(_plugin["id"].replace("_"))
                 else:
                     await install_plugin.send("安装过程可能出现问题：%s" % result)
+                installed_plugin = list(set(installed_plugin))
+                Data(Data.globals, "liteyuki").set_data("installed_plugin", installed_plugin)
         except BaseException as e:
             await install_plugin.send("安装%s时出现错误:%s" % (plugin_name, traceback.format_exc()))
     if suc:

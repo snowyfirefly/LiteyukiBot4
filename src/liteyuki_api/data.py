@@ -1,9 +1,12 @@
+import os
 from typing import Any, Union
 import nonebot
 from nonebot.adapters.onebot.v11.event import GroupMessageEvent, PrivateMessageEvent
-from .config import config_data
+from .config import config_data, Path
 import pymongo
+import sqlite3
 LiteyukiDB = pymongo.MongoClient(config_data["mongodb"])["liteyuki"]
+LiteyukiDB_sql = sqlite3.connect(os.path.join(Path.data, "liteyuki.db"))
 nonebot.logger.info("已连接到数据库：%s" % config_data["mongodb"])
 
 

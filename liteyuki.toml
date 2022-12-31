@@ -1,3 +1,0 @@
-[tool.nonebot]
-plugins = []
-plugin_dirs = ["src/nonebot_plugins", "src/liteyuki_plugins"]

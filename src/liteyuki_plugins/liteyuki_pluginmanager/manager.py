@@ -166,7 +166,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
     args = str(arg).strip().split()
     suc = False
-    installed_plugin = Data(Data.globals, "liteyuki").get_data("install_plugin", [])
+    installed_plugin = Data(Data.globals, "liteyuki").get_data("installed_plugin", [])
 
     for plugin_name in args:
         try:

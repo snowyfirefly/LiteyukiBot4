@@ -152,13 +152,21 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     hardware_high = 640
     block_distance = 20
     block_alpha = 168
+
     single_disk_high = 60
     disk_distance = 10
     disk_count = len(psutil.disk_partitions())
     part_3_prop_high = 60
     part_3_high = disk_distance * (disk_count + 1) + single_disk_high * disk_count + len(part_3_prop) * part_3_prop_high
+    distance_of_part_3_sub_part = 10
+
     width = 1080
     side = 20
+    
+    part_fillet = 20
+    
+    default_font = Font.HYWH_85w
+    
     high = side * 2 + block_distance * 2 + head_high + hardware_high + part_3_high
     if len(os.listdir(drawing_path)) > 0:
         base_img = await run_sync(Utils.central_clip_by_ratio)(Image.open(os.path.join(Path.data, "liteyuki/drawing/%s" % random.choice(os.listdir(drawing_path)))), (width, high))
@@ -174,7 +182,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     """head block"""
     info_canvas.content.head = Rectangle(
         uv_size=(1, content_size[1]), box_size=(1, head_high),
-        parent_point=(0.5, 0), point=(0.5, 0), fillet=20, color=(0, 0, 0, block_alpha)
+        parent_point=(0.5, 0), point=(0.5, 0), fillet=part_fillet, color=(0, 0, 0, block_alpha)
     )
     user_icon_path = os.path.join(Path.cache, "u%s.png" % bot.self_id)
     await run_sync(download_file)("http://q1.qlogo.cn/g?b=qq&nk=%s&s=640" % bot.self_id, user_icon_path)
@@ -186,7 +194,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     icon_pos = info_canvas.get_parent_box("content.head.icon")
     info_canvas.content.head.nickname = Text(
         uv_size=(1, 1), box_size=(0.6, 0.25), parent_point=(icon_pos[2] + 0.05, 0.4), point=(0, 1),
-        text=(await bot.get_login_info())["nickname"], font=Font.HYWH_85w, dp=1
+        text=(await bot.get_login_info())["nickname"], font=default_font, dp=1
     )
     nickname_pos = info_canvas.get_parent_box("content.head.nickname")
     await run_sync(info_canvas.draw_line)("content.head", (nickname_pos[0], nickname_pos[3] + 0.05), (nickname_pos[2], nickname_pos[3] + 0.05), (255, 255, 255, 255), width=5)
@@ -197,12 +205,12 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
             prop_text_list.append(TextSegment(" | ", color=(168, 168, 168, 255)))
         del prop_text_list[-1]
         info_canvas.content.head.__dict__["label_%s" % i] = Text(
-            uv_size=(1, 1), box_size=(0.6, 0.1), parent_point=(nickname_pos[0], nickname_pos[3] + 0.08 + 0.16 * i), point=(0, 0), text=prop_text_list, force_size=True, font=Font.HYWH_85w
+            uv_size=(1, 1), box_size=(0.6, 0.1), parent_point=(nickname_pos[0], nickname_pos[3] + 0.08 + 0.16 * i), point=(0, 0), text=prop_text_list, force_size=True, font=default_font
         )
     """hardware block"""
     hardware = info_canvas.content.hardware = Rectangle(
         uv_size=(1, content_size[1]), box_size=(1, hardware_high),
-        parent_point=(0.5, (head_high + block_distance) / content_size[1]), point=(0.5, 0), fillet=20, color=(0, 0, 0, block_alpha)
+        parent_point=(0.5, (head_high + block_distance) / content_size[1]), point=(0.5, 0), fillet=part_fillet, color=(0, 0, 0, block_alpha)
     )
     hardware_part = [
         {
@@ -246,21 +254,30 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
         part.arc_bg.arc_up = Img(uv_size=(1, 1), box_size=(1, 1), parent_point=(0.5, 0.5), point=(0.5, 0.5), img=arc_up)
         part.arc_bg.percent_text = Text(
-            uv_size=(1, 1), box_size=(0.4, 0.2), parent_point=(0.5, 0.5), point=(0.5, 0.5), text="%.1f" % sub_part["percent"] + "%", force_size=True, font=Font.HYWH_85w
+            uv_size=(1, 1), box_size=(0.4, 0.2), parent_point=(0.5, 0.5), point=(0.5, 0.5), text="%.1f" % sub_part["percent"] + "%", force_size=True, font=default_font
         )
         arc_pos = info_canvas.get_parent_box("content.hardware.part_%s.arc_bg" % part_i)
-        part.name = Text(uv_size=(1, 1), box_size=(1, 0.08), parent_point=(0.5, arc_pos[3] + 0.03), point=(0.5, 0), text=sub_part["name"], force_size=True, font=Font.HYWH_85w)
+        part.name = Text(uv_size=(1, 1), box_size=(1, 0.08), parent_point=(0.5, arc_pos[3] + 0.03), point=(0.5, 0), text=sub_part["name"], force_size=True, font=default_font)
         last_pos = info_canvas.get_parent_box("content.hardware.part_%s.name" % part_i)
         for sub_prop_i, sub_prop in enumerate(sub_part["sub_prop"]):
             part.__dict__["sub_prop_%s" % sub_prop_i] = Text(
-                uv_size=(1, 1), box_size=(1, 0.05), parent_point=(0.5, last_pos[3] + 0.02), point=(0.5, 0), text=sub_prop, force_size=True, color=(192, 192, 192, 255), font=Font.HYWH_85w
+                uv_size=(1, 1), box_size=(1, 0.05), parent_point=(0.5, last_pos[3] + 0.02), point=(0.5, 0), text=sub_prop, force_size=True, color=(192, 192, 192, 255), font=default_font
             )
             last_pos = info_canvas.get_parent_box("content.hardware.part_%s.sub_prop_%s" % (part_i, sub_prop_i))
 
     part_3 = info_canvas.content.part_3 = Rectangle(
         uv_size=(1, content_size[1]), box_size=(1, part_3_high),
-        parent_point=(0.5, (head_high + hardware_high + block_distance * 2) / content_size[1]), point=(0.5, 0), fillet=20, color=(0, 0, 0, block_alpha)
+        parent_point=(0.5, (head_high + hardware_high + block_distance * 2) / content_size[1]), point=(0.5, 0), fillet=part_fillet, color=(0, 0, 0, block_alpha)
     )
+    part_3_pixel_size = info_canvas.get_actual_pixel_size("content.part_3")
+    point_y = distance_of_part_3_sub_part / part_3_pixel_size[1]
+    for disk_i, disk in enumerate(psutil.disk_partitions()):
+        disk_panel = part_3.__dict__["disk_panel_%s" % disk_i] = Panel(
+            uv_size=(1, 1), box_size=(1, single_disk_high / part_3_pixel_size[1]), parent_point=(0.5, point_y), point=(0.5, 0)
+        )
+        disk_panel.usage_img = Rectangle(
+            uv_size=(1, 1), box_size=(0.8, 0.9), parent_point=(0.9, 0.5), point=(1, 0.5), fillet=10, color=(192, 192, 192, 192)
+        )
 
     await liteyuki_bot_info.send(MessageSegment.image(file="file:///%s" % await run_sync(info_canvas.export_cache)()))
 
@@ -297,4 +314,4 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 # 你在尝试一种很新的玩法
 @self_destroy.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
-    pass
+    await self_destroy.send("启动自毁程序，将会随机删除70%的代码")

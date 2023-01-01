@@ -147,6 +147,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     part_3_prop = {
         "OS": "%s %s" % (platform.system(), platform.version()),
         "Python": "%s %s" % (platform.python_implementation(), platform.python_version()),
+        "Signature": generate_signature
     }
     drawing_path = os.path.join(Path.data, "liteyuki/drawing")
     head_high = 350
@@ -163,7 +164,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
     width = 1080
     side_up = 20
-    side_down = 50
+    side_down = 20
 
     part_fillet = 20
 
@@ -303,9 +304,9 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
             uv_size=(1, 1), box_size=(0.25, 0.6), parent_point=(0.95, 0.5), point=(1, 0.5), text=prop_dict[1], force_size=True, font=default_font
         )
 
-    info_canvas.signature = Text(
-        uv_size=(1, 1), box_size=(1, 0.025), parent_point=(0.5, 0.997), point=(0.5, 1), text=generate_signature, font=default_font, color=(80, 80, 80, 255)
-    )
+    # info_canvas.signature = Text(
+    #     uv_size=(1, 1), box_size=(1, 0.025), parent_point=(0.5, 0.997), point=(0.5, 1), text=generate_signature, font=default_font, color=(80, 80, 80, 255)
+    # )
     await liteyuki_bot_info.send(MessageSegment.image(file="file:///%s" % await run_sync(info_canvas.export_cache)()))
 
 

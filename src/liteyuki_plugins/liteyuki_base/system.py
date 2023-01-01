@@ -150,7 +150,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     }
     drawing_path = os.path.join(Path.data, "liteyuki/drawing")
     head_high = 350
-    hardware_high = 640
+    hardware_high = 700
     block_distance = 20
     block_alpha = 168
 

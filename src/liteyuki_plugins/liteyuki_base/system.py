@@ -147,11 +147,6 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     part_3_prop = {
         "OS": "%s %s" % (platform.system(), platform.version()),
         "Python": "%s %s" % (platform.python_implementation(), platform.python_version()),
-        "暴击率(CPU)": "%.1f%%" % sum(psutil.cpu_percent(percpu=True)),
-        "暴击伤害(RAM)": "%.1f%%" % (psutil.virtual_memory().used / psutil.virtual_memory().total * 100),
-        "元素精通": "",
-        "元素充能效率": "",
-
     }
     drawing_path = os.path.join(Path.data, "liteyuki/drawing")
     head_high = 350

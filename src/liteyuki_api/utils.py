@@ -80,9 +80,9 @@ def time_format_list(seconds: int) -> list:
     return times
 
 
-def time_format_text_by_sec(seconds) -> str:
+def time_to_cn_by_sec(seconds) -> str:
     """
-    时长文本： 3年4个月5天12小时32分12秒
+    时长文本带汉字单位： 3年4个月5天12小时32分12秒
 
     :param seconds
     :return:
@@ -94,6 +94,28 @@ def time_format_text_by_sec(seconds) -> str:
         "年", "个月", "日", "时", "分", "秒"
     ]
     for value, unit in zip(time_list, units):
+        if value > 0:
+            show = True
+        if show:
+            text += "%s%s" % (value, unit)
+    return text
+
+
+def time_to_hms_by_sec(seconds) -> str:
+    """
+    时长文本仅到时分秒： 23:23:23
+
+    :param seconds
+    :return:
+    """
+    time_list = time_format_list(seconds)
+    text = ""
+    show = False
+    units = [
+        ":", ":", ""
+    ]
+    time_list[3] += time_list[0] * 31536000 + time_list[1] * 2592000 + time_list[2] * 86400
+    for value, unit in zip(time_list[3:], units):
         if value > 0:
             show = True
         if show:

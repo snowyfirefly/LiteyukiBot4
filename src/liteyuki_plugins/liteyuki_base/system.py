@@ -136,11 +136,11 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
         ],
         [
-            "接收 %s 发送 %s" % (stats.get("stat").get("message_received"), stats.get("stat").get("message_sent")),
-            "运行时间 %s" % time_format_text_by_sec(delta_sec)
+            "收 %s 发 %s" % (stats.get("stat").get("message_received"), stats.get("stat").get("message_sent")),
+            "运行时长 %s" % time_to_hms_by_sec(delta_sec)
         ],
         [
-            "轻雪版本 %s" % config_data["version_name"],
+            "版本 %s" % config_data["version_name"],
             "适配器 %s" % version_info["app_version"]
         ]
     ]

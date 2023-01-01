@@ -20,7 +20,7 @@ for plugin_name in Data(Data.globals, "liteyuki").get_data("installed_plugin", [
     try:
         nonebot.load_plugin(plugin_name)
     except BaseException as e:
-        nonebot.logger.info("插件：%s导入时出现错误:%s" % plugin_name % traceback.format_exception(e))
+        nonebot.logger.info("插件：%s导入时出现错误:%s" % (plugin_name,traceback.format_exception(e)))
 
 if __name__ == "__main__":
     nonebot.run(app="__mp_main__:app")

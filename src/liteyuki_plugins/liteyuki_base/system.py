@@ -163,7 +163,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     disk_distance = 20
     disk_count = len(psutil.disk_partitions())
     part_3_prop_high = 70
-    distance_of_part_3_sub_part = 10
+    distance_of_part_3_sub_part = 20
     part_3_high = disk_distance * (disk_count + 1) + single_disk_high * disk_count + len(part_3_prop) * part_3_prop_high + (len(part_3_prop) + 1) * distance_of_part_3_sub_part
 
     width = 1080

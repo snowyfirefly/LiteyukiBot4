@@ -24,6 +24,7 @@ install_plugin = on_command("#install", aliases={"#安装插件"}, permission=SU
 uninstall_plugin = on_command("#uninstall", aliases={"#卸载插件"}, permission=SUPERUSER)
 update_metadata = on_command("#更新元数据", permission=SUPERUSER)
 online_plugin = on_command("#插件商店")
+install_all_plugin = on_command("#安装全部", permission=SUPERUSER)
 
 
 # help菜单
@@ -168,7 +169,6 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
     args = str(arg).strip().split()
     suc = False
     installed_plugin = Data(Data.globals, "liteyuki").get_data("installed_plugin", [])
-
     for plugin_name in args:
         try:
             _plugins = await run_sync(search_plugin_info_online)(plugin_name)
@@ -176,24 +176,90 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
                 await install_plugin.send("在Nonebot商店中找不到插件：%s" % plugin_name)
             else:
                 _plugin = _plugins[0]
-                await install_plugin.send("正在尝试安装插件：%s(%s)" % (_plugin["name"], _plugin["id"]))
-                result = (await run_sync(os.popen)("pip install %s" % _plugin["id"])).read()
+                result = (await run_sync(os.popen)("pip3 install %s" % _plugin["id"])).read()
                 if "Successfully installed" in result.splitlines()[-1]:
-                    await install_plugin.send("插件：%s(%s)安装成功" % (_plugin["name"], _plugin["id"]))
-                    suc = True
-                    installed_plugin.append(_plugin["id"].replace("-", "_"))
+                    installed = True
                 elif "Requirement already satisfied" in result.splitlines()[-1]:
-                    await install_plugin.send("已安装过%s(%s)，无法重复安装" % (_plugin["name"], _plugin["id"]))
-                    installed_plugin.append(_plugin["id"].replace("-", "_"))
+                    installed = True
                 else:
                     await install_plugin.send("安装过程可能出现问题：%s" % result)
+                    installed = False
+                if installed:
+                    try:
+                        module_name = _plugin["id"].replace("-", "_")
+                        loaded_list = [_plugin.name for _plugin in get_loaded_plugins()]
+                        if module_name in loaded_list:
+                            await install_plugin.send("插件:%s(%s)已装载，无需重复安装" % (_plugin["name"], _plugin["id"]))
+                        else:
+                            nonebot.load_plugin(module_name)
+                            if module_name in loaded_list:
+                                installed_plugin.append(module_name)
+                                await install_plugin.send("插件：%s(%s)安装成功" % (_plugin["name"], _plugin["id"]))
+                            else:
+                                raise ImportError("安装后导入错误")
+                    except BaseException as e:
+                        await install_plugin.send("插件：%s(%s)本身存在问题，库是安装成功了，但是不会被加入加载列表，请联系插件作者解决问题" % (_plugin["name"], _plugin["id"]))
+                        nonebot.logger.info("导入错误：%s" % traceback.format_exception(e))
                 installed_plugin = list(set(installed_plugin))
                 Data(Data.globals, "liteyuki").set_data("installed_plugin", installed_plugin)
         except BaseException as e:
             await install_plugin.send("安装%s时出现错误:%s" % (plugin_name, traceback.format_exc()))
-    if suc:
-        await install_plugin.send("安装过程结束，正在重启...")
-        Reloader.reload()
+
+
+@install_all_plugin.handle()
+async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+    suc = []
+    failed = []
+    installed_plugin = Data(Data.globals, "liteyuki").get_data("installed_plugin", [])
+    for plugin_data in get_online_plugin_list():
+        module_name = plugin_data["id"].replace("-", "_")
+        try:
+            await run_sync(os.system)("pip3 install %s" % plugin_data["id"])
+            nonebot.load_plugin(module_name)
+            loaded_list = [_plugin.name for _plugin in get_loaded_plugins()]
+            if module_name in loaded_list:
+                installed_plugin.append(module_name)
+                suc.append(plugin_data)
+        except BaseException:
+            failed.append(plugin_data)
+    Data(Data.globals, "liteyuki").set_data("installed_plugin", list(set(installed_plugin)))
+    msg = "安装成功："
+    for suc_plug in suc:
+        msg += "\n- %s%s" % (suc_plug["name"], suc_plug["id"])
+    msg += "\n安装失败:"
+    for failed_plug in failed:
+        msg += "\n- %s%s" % (failed_plug["name"], failed_plug["id"])
+    await install_all_plugin.send(msg + "\n正在重启...")
+    Reloader.reload()
+
+@uninstall_plugin.handle()
+async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+    args = str(arg).strip().split()
+    suc = False
+    installed_plugin: list = Data(Data.globals, "liteyuki").get_data("installed_plugin", [])
+    loaded_list = [_plugin.name for _plugin in get_loaded_plugins()]
+    for plugin_name in args:
+        searched_plugin = search_for_plugin(plugin_name)
+        if searched_plugin is not None:
+            if searched_plugin.name in installed_plugin:
+                installed_plugin.remove(searched_plugin.name)
+                try:
+                    result = (await run_sync(os.popen)("pip3 uninstall %s -y" % searched_plugin.name)).read()
+                    if "Successfully uninstalled" in result.splitlines()[-1]:
+                        await uninstall_plugin.send("插件%s(%s)已从加载列表中移除且库已卸载成功" % (searched_plugin.metadata.name, searched_plugin.name))
+                    elif "it is not installed" in result.splitlines()[-1]:
+                        await uninstall_plugin.send("插件%s(%s)已从加载列表中移除但库之前就没安装过，不知道你在干什么，不过无大碍" % (searched_plugin.metadata.name, searched_plugin.name))
+                    else:
+                        raise ImportError("插件就没装过")
+                except BaseException as e:
+                    await uninstall_plugin.send("插件%s(%s)已从加载列表中移除，但卸载库时出现问题，不过无大碍")
+            else:
+                await uninstall_plugin.send("插件不在加载列表,若是手动安装的插件请手动卸载")
+        else:
+            await uninstall_plugin.send("未找到插件")
+    Data(Data.globals, "liteyuki").set_data("installed_plugin", installed_plugin)
+    await uninstall_plugin.send("正在重启")
+    Reloader.reload()
 
 
 @online_plugin.handle()
@@ -235,7 +301,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
                                                                           parent_point=(0.5, i * line_high / plugin_bg_size[1]), point=(0.5, 0),
                                                                           fillet=0, color=(0, 0, 0, 128 if i % 2 == 0 else 0))
         installed = _plugin["id"].replace("-", "_") in loaded_plugin_id_list
-        install_stats = "[已安装]" if installed else ""
+        install_stats = "[已装载]" if installed else ""
         install_color = (0, 255, 0, 255) if installed else (255, 255, 255, 255)
         rectangle.show_name = Text(
             uv_size=(1, 1), box_size=(0.5, 0.45), parent_point=(0.05, 0.5), point=(0, 0.5), text=install_stats + _plugin["name"], dp=1, color=install_color

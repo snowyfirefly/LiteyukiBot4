@@ -17,7 +17,8 @@ metadata_db = Data(Data.globals, "plugin_metadata")
 
 def search_for_plugin(keyword: str) -> Union[Plugin, None]:
     """
-    模糊搜索插件
+    模糊搜索插件.会给插件强行生成元数据
+
     :param keyword: 搜索关键词
     :return:
     """
@@ -25,6 +26,8 @@ def search_for_plugin(keyword: str) -> Union[Plugin, None]:
     for p in get_loaded_plugins():
         """关键词==插件id名"""
         if keyword == p.name:
+            if p.metadata is None:
+                p.metadata = PluginMetadata(name=p.name, description="无", usage="无")
             return p
         # 关键词==配置插件名
         elif p.metadata is not None:
@@ -32,18 +35,24 @@ def search_for_plugin(keyword: str) -> Union[Plugin, None]:
                 return p
         # 关键词==自定义元数据插件名
         elif metadata_db.get_data(p.name) is not None:
-            if keyword == PluginMetadata(**metadata_db.get_data(p.name)).name:
+            meta_data = PluginMetadata(**metadata_db.get_data(p.name))
+            if keyword == meta_data.name:
+                p.metadata = meta_data
                 return p
 
     # 模糊搜索
     for p in get_loaded_plugins():
         if keyword in p.name:
+            if p.metadata is None:
+                p.metadata = PluginMetadata(name=p.name, description="无", usage="无")
             return p
         elif p.metadata is not None:
             if keyword in p.metadata.name:
                 return p
         elif metadata_db.get_data(p.name) is not None:
-            if keyword in PluginMetadata(**metadata_db.get_data(p.name)).name:
+            meta_data = PluginMetadata(**metadata_db.get_data(p.name))
+            if keyword in meta_data.name:
+                p.metadata = meta_data
                 return p
 
     return None

@@ -162,11 +162,11 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
     width = 1080
     side = 20
-    
+
     part_fillet = 20
-    
+
     default_font = Font.HYWH_85w
-    
+
     high = side * 2 + block_distance * 2 + head_high + hardware_high + part_3_high
     if len(os.listdir(drawing_path)) > 0:
         base_img = await run_sync(Utils.central_clip_by_ratio)(Image.open(os.path.join(Path.data, "liteyuki/drawing/%s" % random.choice(os.listdir(drawing_path)))), (width, high))
@@ -229,7 +229,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
             "sub_prop": [
                 "Bot %s" % size_text(psutil.Process(os.getpid()).memory_info().rss),
                 "已用 %s" % size_text(psutil.virtual_memory().used),
-                "剩余 %s" % size_text(psutil.virtual_memory().free),
+                "空闲 %s" % size_text(psutil.virtual_memory().free),
                 "总计 %s" % size_text(psutil.virtual_memory().total)
             ]
         }
@@ -272,11 +272,20 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     part_3_pixel_size = info_canvas.get_actual_pixel_size("content.part_3")
     point_y = distance_of_part_3_sub_part / part_3_pixel_size[1]
     for disk_i, disk in enumerate(psutil.disk_partitions()):
+        disk_usage = psutil.disk_usage(disk.device)
         disk_panel = part_3.__dict__["disk_panel_%s" % disk_i] = Panel(
-            uv_size=(1, 1), box_size=(1, single_disk_high / part_3_pixel_size[1]), parent_point=(0.5, point_y), point=(0.5, 0)
+            uv_size=(1, 1), box_size=(1, single_disk_high / part_3_pixel_size[1]), parent_point=(0.5, point_y + disk_i * (disk_distance + single_disk_high) / part_3_pixel_size[1]),
+            point=(0.5, 0)
+        )
+        disk_panel.name = Text(
+            uv_size=(1, 1), box_size=(0.2, 0.7), parent_point=(0.05, 0.5), point=(0, 0.5), text=disk.device, font=default_font, force_size=True
         )
         disk_panel.usage_img = Rectangle(
-            uv_size=(1, 1), box_size=(0.8, 0.9), parent_point=(0.9, 0.5), point=(1, 0.5), fillet=10, color=(192, 192, 192, 192)
+            uv_size=(1, 1), box_size=(0.75, 0.9), parent_point=(0.95, 0.5), point=(1, 0.5), fillet=10, color=(192, 192, 192, 192)
+        )
+        disk_panel.usage_img.usage_text = Text(
+            uv_size=(1, 1), box_size=(1, 0.75), parent_point=(0.5, 0.5), point=(0.5, 0.5),
+            text="%.1f%%  可用 %s/%s" % (disk_usage.used / disk_usage.total * 100, size_text(disk_usage.free), size_text(disk_usage.total)), font=default_font
         )
 
     await liteyuki_bot_info.send(MessageSegment.image(file="file:///%s" % await run_sync(info_canvas.export_cache)()))

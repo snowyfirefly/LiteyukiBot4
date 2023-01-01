@@ -192,6 +192,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
                             await install_plugin.send("插件:%s(%s)已装载，无需重复安装" % (_plugin["name"], _plugin["id"]))
                         else:
                             nonebot.load_plugin(module_name)
+                            loaded_list = [_plugin.name for _plugin in get_loaded_plugins()]
                             if module_name in loaded_list:
                                 installed_plugin.append(module_name)
                                 await install_plugin.send("插件：%s(%s)安装成功" % (_plugin["name"], _plugin["id"]))

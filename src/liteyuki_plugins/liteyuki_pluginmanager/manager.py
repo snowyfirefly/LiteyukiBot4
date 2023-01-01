@@ -220,9 +220,9 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
             if module_name in loaded_list:
                 installed_plugin.append(module_name)
                 suc.append(plugin_data)
+                Data(Data.globals, "liteyuki").set_data("installed_plugin", list(set(installed_plugin)))
         except BaseException:
             failed.append(plugin_data)
-    Data(Data.globals, "liteyuki").set_data("installed_plugin", list(set(installed_plugin)))
     msg = "安装成功："
     for suc_plug in suc:
         msg += "\n- %s%s" % (suc_plug["name"], suc_plug["id"])

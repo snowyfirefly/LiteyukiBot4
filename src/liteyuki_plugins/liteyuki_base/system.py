@@ -145,7 +145,13 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         ]
     ]
     part_3_prop = {
-        "平台": platform.platform()
+        "OS": "%s %s" % (platform.system(), platform.version()),
+        "Python": "%s %s" % (platform.python_implementation(), platform.python_version()),
+        "暴击率(CPU)": "%.1f%%" % sum(psutil.cpu_percent(percpu=True)),
+        "暴击伤害(RAM)": "%.1f%%" % (psutil.virtual_memory().used / psutil.virtual_memory().total * 100),
+        "元素精通": "",
+        "元素充能效率": "",
+
     }
     drawing_path = os.path.join(Path.data, "liteyuki/drawing")
     head_high = 350
@@ -153,12 +159,12 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     block_distance = 20
     block_alpha = 168
 
-    single_disk_high = 60
-    disk_distance = 10
+    single_disk_high = 70
+    disk_distance = 20
     disk_count = len(psutil.disk_partitions())
-    part_3_prop_high = 60
-    part_3_high = disk_distance * (disk_count + 1) + single_disk_high * disk_count + len(part_3_prop) * part_3_prop_high
+    part_3_prop_high = 70
     distance_of_part_3_sub_part = 10
+    part_3_high = disk_distance * (disk_count + 1) + single_disk_high * disk_count + len(part_3_prop) * part_3_prop_high + (len(part_3_prop) + 1) * distance_of_part_3_sub_part
 
     width = 1080
     side = 20
@@ -166,6 +172,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     part_fillet = 20
 
     default_font = Font.HYWH_85w
+
+    usage_base_color = (192, 192, 192, 192)
 
     high = side * 2 + block_distance * 2 + head_high + hardware_high + part_3_high
     if len(os.listdir(drawing_path)) > 0:
@@ -235,16 +243,9 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         }
     ]
     for part_i, sub_part in enumerate(hardware_part):
-        if sub_part["percent"] < 40:
-            arc_color = (0, 255, 0, 255)
-        elif sub_part["percent"] < 60:
-            arc_color = (255, 255, 255, 255)
-        elif sub_part["percent"] < 80:
-            arc_color = arc_color = Color.hex2dec("FFFFEE00")
-        else:
-            arc_color = (255, 0, 0, 255)
+        arc_color = get_usage_percent_color(sub_part["percent"])
         point_x = (part_i * 2 + 1) / (len(hardware_part) * 2)
-        arc_bg = Graphical.arc(160, 0, 360, width=40, color=(192, 192, 192, 192))
+        arc_bg = Graphical.arc(160, 0, 360, width=40, color=usage_base_color)
         arc_up = Graphical.arc(160, 0, 360 * sub_part["percent"] / 100, width=40, color=arc_color)
 
         part = hardware.__dict__["part_%s" % part_i] = Panel(
@@ -280,12 +281,30 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         disk_panel.name = Text(
             uv_size=(1, 1), box_size=(0.2, 0.7), parent_point=(0.05, 0.5), point=(0, 0.5), text=disk.device, font=default_font, force_size=True
         )
-        disk_panel.usage_img = Rectangle(
-            uv_size=(1, 1), box_size=(0.75, 0.9), parent_point=(0.95, 0.5), point=(1, 0.5), fillet=10, color=(192, 192, 192, 192)
+        disk_panel.usage_bg = Rectangle(
+            uv_size=(1, 1), box_size=(0.75, 0.9), parent_point=(0.2, 0.5), point=(0, 0.5), fillet=10, color=usage_base_color
         )
-        disk_panel.usage_img.usage_text = Text(
-            uv_size=(1, 1), box_size=(1, 0.75), parent_point=(0.5, 0.5), point=(0.5, 0.5),
-            text="%.1f%%  可用 %s/%s" % (disk_usage.used / disk_usage.total * 100, size_text(disk_usage.free), size_text(disk_usage.total)), font=default_font
+        disk_panel.usage_bg.usage_img = Rectangle(
+            uv_size=(1, 1), box_size=(1 * disk_usage.used / disk_usage.total, 1), parent_point=(0, 0.5), point=(0, 0.5), fillet=10,
+            color=get_usage_percent_color(disk_usage.used / disk_usage.total * 100)
+        )
+
+        disk_panel.usage_bg.usage_text = Text(
+            uv_size=(1, 1), box_size=(1, 0.7), parent_point=(0.5, 0.5), point=(0.5, 0.5),
+            text="%.1f%%  可用%s 总共%s" % (disk_usage.used / disk_usage.total * 100, size_text(disk_usage.free, dec=1), size_text(disk_usage.total, dec=1)), font=default_font
+        )
+    point_y += (len(psutil.disk_partitions()) * (single_disk_high + disk_distance) + distance_of_part_3_sub_part) / part_3_pixel_size[1]
+    for prop_i, prop_dict in enumerate(part_3_prop.items()):
+        prop_panel = part_3.__dict__["prop_panel_%s" % prop_i] = Panel(
+            uv_size=(1, 1), box_size=(1, part_3_prop_high / part_3_pixel_size[1]),
+            parent_point=(0.5, point_y + prop_i * (part_3_prop_high + distance_of_part_3_sub_part) / part_3_pixel_size[1]),
+            point=(0.5, 0)
+        )
+        prop_panel.name = Text(
+            uv_size=(1, 1), box_size=(0.25, 0.6), parent_point=(0.05, 0.5), point=(0, 0.5), text=prop_dict[0], force_size=True, font=default_font
+        )
+        prop_panel.value = Text(
+            uv_size=(1, 1), box_size=(0.25, 0.6), parent_point=(0.95, 0.5), point=(1, 0.5), text=prop_dict[1], force_size=True, font=default_font
         )
 
     await liteyuki_bot_info.send(MessageSegment.image(file="file:///%s" % await run_sync(info_canvas.export_cache)()))

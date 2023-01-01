@@ -10,7 +10,7 @@ from nonebot.plugin import get_loaded_plugins
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent, MessageSegment
 
 from ...liteyuki_api.resource import Font
-from ...liteyuki_api.utils import generate_signature
+from ...liteyuki_api.utils import generate_signature, clamp
 
 metadata_db = Data(Data.globals, "plugin_metadata")
 
@@ -111,9 +111,10 @@ def generate_plugin_image(event) -> Canvas:
         else:
             if _plugin.name not in hidden_plugins_store:
                 loaded_plugins_sorted.append(_plugin)
+
     plugin_count = len(loaded_plugins_sorted)
     """每行有多少插件"""
-    count_for_each_line = math.ceil(plugin_count / 20) + 1
+    count_for_each_line = int(clamp(plugin_count / 30, 1, 2))
     """展示了多少行插件"""
     show_line_count = math.ceil(plugin_count / count_for_each_line)
     bg_color = random.choice(["FFEC82F6", "FF82D1F6", "FF82F6A7", "FFF4F682"])

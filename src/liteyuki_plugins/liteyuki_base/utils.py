@@ -15,7 +15,7 @@ def get_usage_percent_color(percent):
     if percent < 40:
         arc_color = (0, 255, 0, 255)
     elif percent < 60:
-        arc_color = Color.hex2dec("FFFFED00")
+        arc_color = Color.hex2dec("FFFFD500")
     elif percent < 80:
         arc_color = Color.hex2dec("FFFF8516")
     else:

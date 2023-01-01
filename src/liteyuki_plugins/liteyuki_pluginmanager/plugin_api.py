@@ -114,7 +114,7 @@ def generate_plugin_image(event) -> Canvas:
 
     plugin_count = len(loaded_plugins_sorted)
     """每行有多少插件"""
-    count_for_each_line = int(clamp(plugin_count / 30, 1, 2))
+    count_for_each_line = 2 if plugin_count >= 40 else 1
     """展示了多少行插件"""
     show_line_count = math.ceil(plugin_count / count_for_each_line)
     bg_color = random.choice(["FFEC82F6", "FF82D1F6", "FF82F6A7", "FFF4F682"])

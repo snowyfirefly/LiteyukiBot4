@@ -250,7 +250,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
         part.arc_bg.arc_up = Img(uv_size=(1, 1), box_size=(1, 1), parent_point=(0.5, 0.5), point=(0.5, 0.5), img=arc_up)
         part.arc_bg.percent_text = Text(
-            uv_size=(1, 1), box_size=(0.4, 0.2), parent_point=(0.5, 0.5), point=(0.5, 0.5), text="%.1f" % sub_part["percent"] + "%", force_size=True, font=default_font
+            uv_size=(1, 1), box_size=(0.55, 0.2), parent_point=(0.5, 0.5), point=(0.5, 0.5), text="%.1f" % sub_part["percent"] + "%", font=default_font, dp=1
         )
         arc_pos = info_canvas.get_parent_box("content.hardware.part_%s.arc_bg" % part_i)
         part.name = Text(uv_size=(1, 1), box_size=(1, 0.08), parent_point=(0.5, arc_pos[3] + 0.03), point=(0.5, 0), text=sub_part["name"], force_size=True, font=default_font)

@@ -162,7 +162,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     part_3_high = disk_distance * (disk_count + 1) + single_disk_high * disk_count + len(part_3_prop) * part_3_prop_high + (len(part_3_prop) + 1) * distance_of_part_3_sub_part
 
     width = 1080
-    side = 20
+    side_up = 20
+    side_down = 50
 
     part_fillet = 20
 
@@ -170,7 +171,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
     usage_base_color = (192, 192, 192, 192)
 
-    high = side * 2 + block_distance * 2 + head_high + hardware_high + part_3_high
+    high = side_up + side_down + block_distance * 2 + head_high + hardware_high + part_3_high
     if len(os.listdir(drawing_path)) > 0:
         base_img = await run_sync(Utils.central_clip_by_ratio)(Image.open(os.path.join(Path.data, "liteyuki/drawing/%s" % random.choice(os.listdir(drawing_path)))), (width, high))
     else:
@@ -178,7 +179,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     info_canvas = Canvas(base_img)
     info_canvas.content = Panel(
         uv_size=info_canvas.base_img.size,
-        box_size=(info_canvas.base_img.size[0] - 2 * side, info_canvas.base_img.size[1] - 2 * side),
+        box_size=(info_canvas.base_img.size[0] - 2 * side_up, info_canvas.base_img.size[1] - 2 * side_up),
         parent_point=(0.5, 0.5), point=(0.5, 0.5)
     )
     content_size = info_canvas.get_actual_pixel_size("content")
@@ -302,6 +303,9 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
             uv_size=(1, 1), box_size=(0.25, 0.6), parent_point=(0.95, 0.5), point=(1, 0.5), text=prop_dict[1], force_size=True, font=default_font
         )
 
+    info_canvas.signature = Text(
+        uv_size=(1, 1), box_size=(1, 0.025), parent_point=(0.5, 0.997), point=(0.5, 1), text=generate_signature, font=default_font, color=(80, 80, 80, 255)
+    )
     await liteyuki_bot_info.send(MessageSegment.image(file="file:///%s" % await run_sync(info_canvas.export_cache)()))
 
 

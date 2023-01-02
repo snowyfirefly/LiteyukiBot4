@@ -199,7 +199,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
                             else:
                                 raise ImportError("安装后导入错误")
                     except BaseException as e:
-                        await install_plugin.send("插件：%s(%s)本身存在问题，库是安装成功了，但是不会被加入加载列表，请联系插件作者解决问题" % (_plugin["name"], _plugin["id"]))
+                        await install_plugin.send("插件：%s(%s)本身存在问题请联系插件作者:%s" % (_plugin["name"], _plugin["id"], traceback.format_exception(e)))
                         nonebot.logger.info("导入错误：%s" % traceback.format_exception(e))
                 installed_plugin = list(set(installed_plugin))
                 Data(Data.globals, "liteyuki").set_data("installed_plugin", installed_plugin)
@@ -232,6 +232,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
         msg += "\n- %s%s" % (failed_plug["name"], failed_plug["id"])
     await install_all_plugin.send(msg + "\n正在重启...")
     Reloader.reload()
+
 
 @uninstall_plugin.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):

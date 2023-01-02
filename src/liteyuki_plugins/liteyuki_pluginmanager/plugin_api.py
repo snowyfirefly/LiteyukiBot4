@@ -67,6 +67,30 @@ def get_plugin(plugin_name) -> Plugin:
     return plugins[plugin_name]
 
 
+def get_loaded_plugin_by_liteyuki() -> List[Plugin]:
+    """
+    给插件自动添加元数据
+
+    :return:
+    """
+    plugin_list = []
+    for _plugin in get_loaded_plugins():
+        if _plugin.metadata is None:
+            if metadata_db.get_data(_plugin.name) is not None:
+                _plugin.metadata = metadata_db.get_data(_plugin.name)
+            else:
+                _plugin.metadata = PluginMetadata(
+                    name=_plugin.name,
+                    description="无",
+                    usage="无",
+                    extra={
+                        "no_metadata": True
+                    }
+                )
+        plugin_list.append(_plugin)
+    return plugin_list
+
+
 def get_plugin_default_stats(plugin_name) -> bool:
     plugin = get_plugin(plugin_name)
     if plugin.metadata is not None:
@@ -233,8 +257,10 @@ def search_plugin_info_online(plugin_name) -> List[Dict] | None:
     :return:
     """
     data = []
+    plugin_name = plugin_name.replace("-", "_")
     for plugin_data in get_online_plugin_list():
-        if plugin_name in plugin_data["name"] or plugin_name in plugin_data["id"] or plugin_name in plugin_data["description"]:
+        print(plugin_name, plugin_data["id"])
+        if plugin_name in plugin_data["name"] or plugin_name in plugin_data["id"].replace("-", "_") or plugin_name in plugin_data["description"]:
             data.append(plugin_data)
     if len(data) > 0:
         return data

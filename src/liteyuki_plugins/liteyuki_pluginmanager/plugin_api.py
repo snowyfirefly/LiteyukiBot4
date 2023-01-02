@@ -77,7 +77,7 @@ def get_loaded_plugin_by_liteyuki() -> List[Plugin]:
     for _plugin in get_loaded_plugins():
         if _plugin.metadata is None:
             if metadata_db.get_data(_plugin.name) is not None:
-                _plugin.metadata = metadata_db.get_data(_plugin.name)
+                _plugin.metadata = PluginMetadata(**metadata_db.get_data(_plugin.name))
             else:
                 _plugin.metadata = PluginMetadata(
                     name=_plugin.name,

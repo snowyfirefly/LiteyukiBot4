@@ -62,7 +62,7 @@ async def update_metadata():
     """
     for p in get_loaded_plugins():
         try:
-            if p.metadata is None and metadata_db.get_data(p.name) is None:
+            if p.metadata is None and metadata_db.get_data(p.name) is None or p.metadata is not None and p.metadata.extra.get("metadata", "a") is None:
                 plugin_data = await run_sync(search_plugin_info_online)(p.name)
                 if plugin_data is not None:
                     plugin_data = plugin_data[0]

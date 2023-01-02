@@ -27,7 +27,7 @@ def search_for_plugin(keyword: str) -> Union[Plugin, None]:
         """关键词==插件id名"""
         if keyword == p.name:
             if p.metadata is None:
-                p.metadata = PluginMetadata(name=p.name, description="无", usage="无")
+                p.metadata = PluginMetadata(name=p.name, description="无", usage="无", extra={"metadata": None})
             return p
         # 关键词==配置插件名
         elif p.metadata is not None:
@@ -44,7 +44,7 @@ def search_for_plugin(keyword: str) -> Union[Plugin, None]:
     for p in get_loaded_plugins():
         if keyword in p.name:
             if p.metadata is None:
-                p.metadata = PluginMetadata(name=p.name, description="无", usage="无")
+                p.metadata = PluginMetadata(name=p.name, description="无", usage="无", extra={"metadata": None})
             return p
         elif p.metadata is not None:
             if keyword in p.metadata.name:

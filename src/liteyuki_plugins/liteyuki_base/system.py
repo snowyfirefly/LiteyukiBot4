@@ -119,7 +119,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     protocol_dict = {
         -1: "",
         0: "iPad",
-        1: "Android",
+        1: "手机",
         2: "手表",
         3: "MacOS",
         4: "企点",
@@ -131,8 +131,9 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     prop_list = [
         [
             "%s%s" % (protocol_dict.get(version_info["protocol"], ""), "在线" if stats.get("online") else "离线"),
-            "群聊 %s" % len(await bot.get_group_list()),
-            "好友 %s" % len(await bot.get_friend_list())
+            "群 %s" % len(await bot.get_group_list()),
+            "好友 %s" % len(await bot.get_friend_list()),
+            "插件 %s" % len(get_loaded_plugins())
 
         ],
         [

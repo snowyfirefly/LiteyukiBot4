@@ -110,7 +110,7 @@ def time_to_hms_by_sec(seconds) -> str:
     """
     time_list = time_format_list(seconds)
     text = ""
-    show = False
+    show = True
     units = [
         ":", ":", ""
     ]

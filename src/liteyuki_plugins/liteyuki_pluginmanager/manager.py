@@ -170,9 +170,10 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
     args = str(arg).strip().split()
     suc = False
     installed_plugin = Data(Data.globals, "liteyuki").get_data("installed_plugin", [])
+    search_list = get_online_plugin_list()
     for plugin_name in args:
         try:
-            _plugins = await run_sync(search_plugin_info_online)(plugin_name)
+            _plugins = await run_sync(search_plugin_info_online)(plugin_name, search_list)
             if _plugins is None:
                 await install_plugin.send("在Nonebot商店中找不到插件：%s" % plugin_name)
             else:
@@ -190,22 +191,22 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
                         module_name = _plugin["id"].replace("-", "_")
                         loaded_list = [_plugin.name for _plugin in get_loaded_plugins()]
                         if module_name in loaded_list:
-                            await install_plugin.send("插件:%s(%s)已装载，无需重复安装" % (_plugin["name"], _plugin["id"]))
+                            await install_plugin.send("%s(%s)已装载，无需重复安装" % (_plugin["name"], _plugin["id"]))
                         else:
                             nonebot.load_plugin(module_name)
                             loaded_list = [_plugin.name for _plugin in get_loaded_plugins()]
                             if module_name in loaded_list:
                                 installed_plugin.append(module_name)
-                                await install_plugin.send("插件：%s(%s)安装成功" % (_plugin["name"], _plugin["id"]))
+                                await install_plugin.send("%s(%s)安装成功" % (_plugin["name"], _plugin["id"]))
                             else:
                                 raise ImportError("安装后导入错误")
                     except BaseException as e:
-                        await install_plugin.send("插件：%s(%s)本身存在问题请联系插件作者:%s" % (_plugin["name"], _plugin["id"], traceback.format_exception(e)))
+                        await install_plugin.send("%s(%s)本身存在问题，安装失败，请联系插件作者:%s" % (_plugin["name"], _plugin["id"], traceback.format_exception(e)))
                         nonebot.logger.info("导入错误：%s" % traceback.format_exception(e))
                 installed_plugin = list(set(installed_plugin))
                 Data(Data.globals, "liteyuki").set_data("installed_plugin", installed_plugin)
         except BaseException as e:
-            await install_plugin.send("安装%s时出现错误:%s" % (plugin_name, traceback.format_exc()))
+            await install_plugin.send("安装时出现错误:%s" % (traceback.format_exc()))
 
 
 @install_all_plugin.handle()
@@ -268,7 +269,6 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
 @online_plugin.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
     loaded_plugin_id_list = [_plugin.name for _plugin in get_loaded_plugins()]
-    print(loaded_plugin_id_list)
     msg = "Nonebot插件商店内容：\n"
     times = 0
     if str(arg).strip() == "":

@@ -250,15 +250,18 @@ def generate_plugin_image(event) -> Canvas:
     return help_canvas
 
 
-def search_plugin_info_online(plugin_name) -> List[Dict] | None:
+def search_plugin_info_online(plugin_name, search_list=None) -> List[Dict] | None:
     """
     在线搜索插件信息
+    :param search_list: 搜索列表，建议多插件安装时直接传入
     :param plugin_name:
     :return:
     """
     data = []
     plugin_name = plugin_name.replace("-", "_")
-    for plugin_data in get_online_plugin_list():
+    if search_list is None:
+        search_list = get_online_plugin_list()
+    for plugin_data in search_list:
         print(plugin_name, plugin_data["id"])
         if plugin_name in plugin_data["name"] or plugin_name in plugin_data["id"].replace("-", "_") or plugin_name in plugin_data["description"]:
             data.append(plugin_data)

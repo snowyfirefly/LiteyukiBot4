@@ -13,6 +13,7 @@ from ...liteyuki_api.reloader import Reloader
 from ...liteyuki_api.utils import download_file, Command
 
 driver = get_driver()
+from .autorun import *
 from .plugin_api import *
 
 bot_help = on_command(cmd="help", aliases={"#帮助", "#列出插件", "#插件列表", "#全部插件", "帮助"})

@@ -64,7 +64,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], args
             icon_avatar_id = player_data["playerInfo"]["profilePicture"]["avatarId"]
             """头像材质名称"""
             iconName = file_pool["characters.json"].get(str(icon_avatar_id), {"iconName": "unknown"})["iconName"]
-            await run_sync(resource_detect)(iconName)
+            await run_sync(enka_resource_detect)(iconName)
             """检测字体"""
             hywh_font = os.path.join(Path.res, "fonts/hywh-85w.ttf")
             if not os.path.exists(hywh_font):

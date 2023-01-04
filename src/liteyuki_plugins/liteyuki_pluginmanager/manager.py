@@ -250,19 +250,22 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
                 try:
                     result = (await run_sync(os.popen)("pip3 uninstall %s -y" % searched_plugin.name)).read()
                     if "Successfully uninstalled" in result.splitlines()[-1]:
-                        await uninstall_plugin.send("插件%s(%s)已从加载列表中移除且库已卸载成功" % (searched_plugin.metadata.name, searched_plugin.name))
+                        await uninstall_plugin.send("%s(%s)已卸载成功" % (searched_plugin.metadata.name, searched_plugin.name))
+                        suc = True
                     elif "it is not installed" in result.splitlines()[-1]:
-                        await uninstall_plugin.send("插件%s(%s)已从加载列表中移除但库之前就没安装过，不知道你在干什么，不过无大碍" % (searched_plugin.metadata.name, searched_plugin.name))
+                        await uninstall_plugin.send("%s(%s)已从加载列表中移除但没有安装过，无法卸载" % (searched_plugin.metadata.name, searched_plugin.name))
+                        suc = True
                     else:
                         raise ImportError("插件就没装过")
                 except BaseException as e:
-                    await uninstall_plugin.send("插件%s(%s)已从加载列表中移除，但卸载库时出现问题，不过无大碍")
+                    await uninstall_plugin.send("%s(%s)已从加载列表中移除，但卸载库时出现问题，不过无大碍")
             else:
                 await uninstall_plugin.send("插件不在加载列表,若是手动安装的插件请手动卸载")
         else:
             await uninstall_plugin.send("未找到插件")
     Data(Data.globals, "liteyuki").set_data("installed_plugin", installed_plugin)
-    await uninstall_plugin.send("正在重启")
+    if suc:
+        await uninstall_plugin.send("卸载完成正在重启...")
     Reloader.reload()
 
 

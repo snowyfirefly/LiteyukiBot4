@@ -1,28 +1,24 @@
 import json
-import os
 import time
 import traceback
+from typing import Type
 
 import aiohttp
 from PIL import ImageEnhance
-from nonebot import on_message
-from nonebot.adapters.onebot.v11 import Message, MessageSegment
+from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot.exception import IgnoredException
-from nonebot.params import CommandArg
+from nonebot.internal.matcher import Matcher
 from nonebot.utils import run_sync
 
 from .rule import *
 from .utils import *
 from ...liteyuki_api.canvas import *
-from ...liteyuki_api.data import Data
 from ...liteyuki_api.canvas import Color
-
-character_card = on_message(rule=args_end_with("面板"))
-character_data = on_message(rule=args_end_with("角色数据"))
+from ...liteyuki_api.data import Data
 
 
-@character_card.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], matcher: Type[Matcher]):
+    character_card = matcher
     file_pool = {}
     for f in resource_pool.keys():
         if os.path.exists(os.path.join(Path.data, "genshin", f)):
@@ -252,7 +248,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
             character_wish_img = await run_sync(wish_img_crop)(character_wish_img)
         else:
             character_wish_img = Image.new("RGBA", (300, 300), color=(255, 255, 255, 255))
-        await run_sync(resource_detect)(enka_character_data["SideIconName"].split("_")[-1])
+        await run_sync(enka_resource_detect)(enka_character_data["SideIconName"].split("_")[-1])
         """大画布 | 渲染部分"""
         canvas = Canvas(Image.open(os.path.join(Path.res, "textures", "genshin", "%s_bg.png" % greece_element)))
         canvas.base_img = canvas.base_img.resize((1960, 1000))
@@ -297,7 +293,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         texture_size = 0.064
         constellation_num = len(player_character_data.get("talentIdList", []))
         for i, constellation_texture_name in enumerate(enka_character_data["Consts"]):
-            await run_sync(resource_detect)(constellation_texture_name)
+            await run_sync(enka_resource_detect)(constellation_texture_name)
             if i + 1 <= constellation_num:
                 # 已解锁命之座,先放底图，再放材质图
                 canvas.part_1.__dict__["base_%s" % i] = Img(uv_size=(1, 1), box_size=(0.3, base_size), parent_point=(x0, y0 + i * constellation_distance),
@@ -308,9 +304,11 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
                                                              img=Image.open(os.path.join(Path.cache, "genshin", "%s.png" % constellation_texture_name)))
             else:
                 # 先放材质图，再放底图遮盖，最后加锁
-                texture_img = await run_sync(ImageEnhance.Brightness(Image.open(os.path.join(Path.cache, "genshin", "%s.png" % constellation_texture_name)).convert("RGBA")).enhance)(0.5)
+                texture_img = await run_sync(
+                    ImageEnhance.Brightness(Image.open(os.path.join(Path.cache, "genshin", "%s.png" % constellation_texture_name)).convert("RGBA")).enhance)(0.5)
                 base_img = await run_sync(
-                    ImageEnhance.Brightness(Image.open(os.path.join(Path.res, "textures", "genshin", "constellation_%s_locked.png" % greece_element)).convert("RGBA")).enhance)(0.75)
+                    ImageEnhance.Brightness(Image.open(os.path.join(Path.res, "textures", "genshin", "constellation_%s_locked.png" % greece_element)).convert("RGBA")).enhance)(
+                    0.75)
                 canvas.part_1.__dict__["const_%s" % i] = Img(uv_size=(1, 1), box_size=(0.3, base_size), parent_point=(x0, y0 + i * constellation_distance),
                                                              point=(0.5, 0.5),
                                                              img=base_img)
@@ -329,7 +327,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         for skill_i, skill_data in enumerate(enka_character_data["Skills"].items()):
             skill_id = skill_data[0]
             skill_texture = skill_data[1]
-            await run_sync(resource_detect)(skill_texture)
+            await run_sync(enka_resource_detect)(skill_texture)
             skill_level = player_character_data["skillLevelMap"][skill_id]
             add = False
             if skill_i == 1 and constellation_num >= 3:
@@ -370,7 +368,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         start_line_y = 0.4
         star = weapon["flat"]["rankLevel"]
         """武器贴图缓存检测"""
-        await run_sync(resource_detect)(weapon["flat"]["icon"])
+        await run_sync(enka_resource_detect)(weapon["flat"]["icon"])
         """武器贴图"""
         canvas.part_2.weapon_icon = Img(uv_size=(1, 1), box_size=(0.54, 0.25), parent_point=(start_line_x, 0.05),
                                         point=(0, 0), img=Image.open(os.path.join(Path.cache, "genshin", "%s.png" % weapon["flat"]["icon"])))
@@ -412,7 +410,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         canvas.part_2.weapon_info.level = Text(uv_size=(1, 1), box_size=(0.5, 0.2), parent_point=(x0 - 0.05, y1),
                                                point=(0, 0.5),
                                                text="%s %s/%s" % (
-                                               get_lang_word("level", lang, file_pool["loc.json"]), weapon["weapon"]["level"], rank_level[weapon["weapon"].get("promoteLevel", 0)]),
+                                                   get_lang_word("level", lang, file_pool["loc.json"]), weapon["weapon"]["level"],
+                                                   rank_level[weapon["weapon"].get("promoteLevel", 0)]),
                                                font=hywh_font, force_size=True)
         refine = 0
         if "affixMap" in weapon["weapon"]:
@@ -464,7 +463,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
                                        parent_point=(0.98, 0.5), point=(1, 0.5), text=str(int(prop_data["value"])), font=hywh_font, force_size=True)
             elif prop_data["type"] == "percent":
                 prop_base.value = Text(uv_size=(1, 1), box_size=(0.4, 0.45),
-                                       parent_point=(0.98, 0.5), point=(1, 0.5), text=str(round(prop_data["value"] * 100, prop_data.get("accuracy", 1))) + "%", font=hywh_font, force_size=True)
+                                       parent_point=(0.98, 0.5), point=(1, 0.5), text=str(round(prop_data["value"] * 100, prop_data.get("accuracy", 1))) + "%", font=hywh_font,
+                                       force_size=True)
             line += 1
 
         """圣遗物部分"""
@@ -473,7 +473,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         artifact_pos = [x0, y0, 0, 0]
         artifact_i = 0
         for artifact_i, artifact in enumerate(artifacts):
-            await run_sync(resource_detect)(artifact["flat"]["icon"])
+            await run_sync(enka_resource_detect)(artifact["flat"]["icon"])
             """圣遗物底图"""
             artifact_bg = Rectangle(uv_size=(1, 1), box_size=(0.9, 0.1428), parent_point=(0.5, y0 + artifact_distance * artifact_i), point=(0.5, 0), fillet=base_fillet,
                                     color=(0, 0, 0, 80), keep_ratio=False)
@@ -553,7 +553,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         times = "%s-%s-%s %s:%s" % tuple(player_data.get("time", list(time.localtime())[0:5]))
         canvas.player_info = Text(uv_size=(1, 1), box_size=(0.5, 0.025),
                                   parent_point=(0.99, 0.99),
-                                  point=(1, 1), text="%s    Language: %s    %s    UID： %s" % (times, lang, player_data["playerInfo"]["nickname"], uid), font=hywh_font,
+                                  point=(1, 1), text="Update %s   Lang %s   %s   UID： %s" % (times, lang, player_data["playerInfo"]["nickname"], uid), font=hywh_font,
                                   force_size=True)
         canvas.liteyuki_sign = Text(uv_size=(1, 1), box_size=(0.5, 0.025),
                                     parent_point=(0.01, 0.99),
@@ -568,14 +568,14 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         await character_card.finish("数据资源可能缺失或出现错误，请检查:%s\n请尝试发送「原神资源更新」以更新资源" % traceback.format_exception(e), at_sender=True)
 
 
-@character_data.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+async def character_data_handle(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], matcher: Type[Matcher]):
+    character_data = matcher
     file_pool = {}
     for f in resource_pool.keys():
         if os.path.exists(os.path.join(Path.data, "genshin", f)):
             file_pool[f] = json.load(open(os.path.join(Path.data, "genshin", f), encoding="utf-8"))
         else:
-            await character_card.finish(data_lost, at_sender=True)
+            await character_data.finish(data_lost, at_sender=True)
     args, kwargs = Command.formatToCommand(event.raw_message)
     character_name_input = args[0].strip().replace("角色数据", "")
     _break = False
@@ -601,7 +601,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
             if character_name_input in aliases_list:
                 break
         else:
-            await character_card.finish("角色名不存在或资源未更新", at_sender=True)
+            await character_data.finish("角色名不存在或资源未更新", at_sender=True)
     lang = kwargs.get("lang", Data(Data.users, event.user_id).get_data(key="genshin.lang", default=lang))
     character_hash_id = hash_id
 
@@ -613,12 +613,12 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
             character_id = character_id
             break
     else:
-        await character_card.finish("角色名不存在或资源未更新", at_sender=True)
+        await character_data.finish("角色名不存在或资源未更新", at_sender=True)
 
     """uid判定"""
     uid = kwargs.get("uid", Data(Data.users, event.user_id).get_data(key="genshin.uid", default=None))
     if uid is None:
-        await character_card.finish("命令参数中未包含uid且未绑定过uid", at_sender=True)
+        await character_data.finish("命令参数中未包含uid且未绑定过uid", at_sender=True)
     else:
         uid = int(uid)
 
@@ -634,10 +634,10 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
     """uid真实性判定"""
     if "playerInfo" not in player_data:
-        await character_card.finish("uid信息不存在", at_sender=True)
+        await character_data.finish("uid信息不存在", at_sender=True)
     """角色展示判定i"""
     if "avatarInfoList" not in player_data:
-        await character_card.finish(
+        await character_data.finish(
             MessageSegment.text("请在游戏中显示角色详情") + MessageSegment.image(file="file:///%s" % os.path.join(Path.res, "textures", "genshin", "open_details.png")),
             at_sender=True)
     """ 判断旅行者"""
@@ -649,10 +649,10 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     for user_character in player_data["avatarInfoList"]:
         if user_character["avatarId"] == int(character_id) or user_character["avatarId"] in [10000005, 10000007] and is_traveler:
             if is_traveler:
-                await character_card.finish("暂不支持查询旅行者面板", at_sender=True)
+                await character_data.finish("暂不支持查询旅行者面板", at_sender=True)
             break
     else:
-        await character_card.finish("你的展板中没有此角色,请展示后发送「原神数据」以更新面板", at_sender=True)
+        await character_data.finish("你的展板中没有此角色,请展示后发送「原神数据」以更新面板", at_sender=True)
 
     """角色在资源中的数据"""
     enka_character_data = character

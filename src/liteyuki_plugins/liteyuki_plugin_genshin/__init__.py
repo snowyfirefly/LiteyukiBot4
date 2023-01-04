@@ -6,8 +6,9 @@ from nonebot import on_command, on_message
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 
+from .uid import set_uid_handle
 from .user_card import *
-from .character_card import *
+from .character_info import *
 from .utils import *
 from .resource import *
 
@@ -16,30 +17,23 @@ hid_uid = on_command(cmd="遮挡uid", block=True)
 update_resource = on_command(cmd="原神资源更新", block=True, permission=SUPERUSER)
 character_img = on_message(rule=args_end_with("立绘"), block=True)
 add_aliases = on_command(cmd="添加别称", block=True, permission=SUPERUSER)
+character_card = on_message(rule=args_end_with("面板"))
+character_data = on_message(rule=args_end_with("角色数据"))
+
+
+@character_card.handle()
+async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+    await character_card_handle(bot, event, character_card)
+
+
+@character_data.handle()
+async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+    await character_data_handle(bot, event, character_data)
 
 
 @set_uid.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], args: Message = CommandArg()):
-    args, kwargs = Command.formatToCommand(str(args).strip())
-    if not args[0].isdigit():
-        await set_uid.finish("uid格式错误", at_sender=True)
-    else:
-        uid = int(args[0])
-        async with aiohttp.request("GET", url="https://enka.microgg.cn/u/%s" % uid) as resp:
-            player_data = await resp.json()
-
-            if "playerInfo" not in player_data:
-                await set_uid.finish(uid_info_error, at_sender=True)
-            else:
-                playerInfo = player_data["playerInfo"]
-                lang = kwargs.get("lang", "zh-CN")
-
-                Data(Data.users, event.user_id).set_data(key="genshin.uid", value=uid)
-                Data(Data.users, event.user_id).set_data(key="genshin.lang", value=lang)
-                await set_uid.finish("绑定成功：%s（%s  Lv.%s）" % (playerInfo["nickname"], servers.get(str(uid)[0], "Unknown Server"), playerInfo["level"]), at_sender=True)
-                if len(player_data.get("avatarInfoList", [])) > 0:
-                    player_data["time"] = tuple(list(time.localtime())[0:5])
-                    Data(Data.globals, "genshin_player_data").set_data(str(uid), player_data)
+    await set_uid_handle(bot, event, set_uid, args)
 
 
 @hid_uid.handle()
@@ -160,7 +154,7 @@ __plugin_meta__ = PluginMetadata(
     name="原神查询",
     description="原神角色面板查询",
     usage="命令：\n"
-          "•「原神资源更新」更新本地的资源文件\n"
+          "•「原神资源更新」更新本地的资源文件\n\n"
           "•「xx面板」查看角色面板\n"
           "•「xx角色数据]获取角色原始数据文件\n"
           "•「原神数据 [uid]」更新原神角色展示框中的数据,默认为绑定的uid\n"
@@ -174,6 +168,7 @@ __plugin_meta__ = PluginMetadata(
     extra={
         "default_enable": True,
         "liteyuki_resource_git": resource_git,
+        "liteyuki_resource": resource,
         "liteyuki_plugin": True
     }
 )

@@ -148,3 +148,13 @@ resource_git = {
     "src/resource/textures/genshin/魈.png": "snowyfirefly/Liteyuki-Resource/raw/master/textures/genshin/魈.png",
     "src/resource/textures/genshin/鹿野院平藏.png": "snowyfirefly/Liteyuki-Resource/raw/master/textures/genshin/鹿野院平藏.png",
 }
+resource = {
+
+    "characters.json": "https://raw.kgithub.com/mrwan200/enkanetwork.py-data/master/exports/data/characters.json",
+    "characters_enka.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/characters.json",
+    "loc.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/loc.json",
+    "AvatarExcelConfigData.json": "https://git.crepe.moe/grasscutters/Grasscutter_Resources/-/raw/3.3/Resources/ExcelBinOutput/AvatarExcelConfigData.json?inline=false",
+    "AvatarSkillDepotExcelConfigData.json": "https://git.crepe.moe/grasscutters/Grasscutter_Resources/-/raw/3.3/Resources/ExcelBinOutput/AvatarSkillDepotExcelConfigData.json"
+                                            "?inline=false",
+
+}

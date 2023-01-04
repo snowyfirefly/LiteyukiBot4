@@ -45,15 +45,10 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
 @update_resource.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
-    for res_file in resource_git.items():
-        if not os.path.exists(os.path.join(Path.root, res_file[0])):
-            print("正在下载：%s" % res_file[0])
-            await run_sync(download_file)(res_file[1], os.path.join(Path.root, res_file[0]))
-    if not os.path.exists(os.path.join(Path.data, "genshin")):
-        os.makedirs(os.path.join(Path.data, "genshin"))
+
     for file, url in resource_pool.items():
         await update_resource.send("正在更新：%s" % file)
-        await run_sync(download_file)(url, os.path.join(Path.data, "genshin", file))
+        await run_sync(download_file)(url, os.path.join(Path.root, file))
     await update_resource.finish("资源更新完成", at_sender=True)
 
 

@@ -22,8 +22,8 @@ user_card = on_command(cmd="面板更新", aliases={"原神数据", "更新面�
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], args: Message = CommandArg()):
     file_pool = {}
     for f in resource_pool.keys():
-        if os.path.exists(os.path.join(Path.data, "genshin", f)):
-            file_pool[f] = json.load(open(os.path.join(Path.data, "genshin", f), encoding="utf-8"))
+        if os.path.exists(os.path.join(Path.root, f)):
+            file_pool[f] = json.load(open(os.path.join(Path.root, f), encoding="utf-8"))
         else:
             await user_card.finish(data_lost, at_sender=True)
     args, kwargs = Command.formatToCommand(str(args).strip())

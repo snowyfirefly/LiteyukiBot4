@@ -21,10 +21,12 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
     character_card = matcher
     file_pool = {}
     for f in resource_pool.keys():
-        if os.path.exists(os.path.join(Path.data, "genshin", f)):
-            file_pool[f] = json.load(open(os.path.join(Path.data, "genshin", f), encoding="utf-8"))
+        whole_path=os.path.join(Path.root,f)
+        print(whole_path)
+        if os.path.exists(whole_path):
+            file_pool[f] = json.load(open(whole_path, encoding="utf-8"))
         else:
-            await character_card.finish(data_lost, at_sender=True)
+            await character_card.finish(data_lost+whole_path, at_sender=True)
     args, kwargs = Command.formatToCommand(event.raw_message)
     character_name_input = args[0].strip().replace("面板", "").replace("#", "")
     if character_name_input == "更新":
@@ -572,8 +574,8 @@ async def character_data_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
     character_data = matcher
     file_pool = {}
     for f in resource_pool.keys():
-        if os.path.exists(os.path.join(Path.data, "genshin", f)):
-            file_pool[f] = json.load(open(os.path.join(Path.data, "genshin", f), encoding="utf-8"))
+        if os.path.exists(os.path.join(Path.root, f)):
+            file_pool[f] = json.load(open(os.path.join(Path.root, f), encoding="utf-8"))
         else:
             await character_data.finish(data_lost, at_sender=True)
     args, kwargs = Command.formatToCommand(event.raw_message)

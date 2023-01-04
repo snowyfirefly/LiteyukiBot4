@@ -150,11 +150,10 @@ resource_git = {
 }
 resource = {
 
-    "characters.json": "https://raw.kgithub.com/mrwan200/enkanetwork.py-data/master/exports/data/characters.json",
-    "characters_enka.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/characters.json",
-    "loc.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/loc.json",
-    "AvatarExcelConfigData.json": "https://git.crepe.moe/grasscutters/Grasscutter_Resources/-/raw/3.3/Resources/ExcelBinOutput/AvatarExcelConfigData.json?inline=false",
-    "AvatarSkillDepotExcelConfigData.json": "https://git.crepe.moe/grasscutters/Grasscutter_Resources/-/raw/3.3/Resources/ExcelBinOutput/AvatarSkillDepotExcelConfigData.json"
-                                            "?inline=false",
+    "src/resource/genshin/characters.json": "https://raw.kgithub.com/mrwan200/enkanetwork.py-data/master/exports/data/characters.json",
+    "src/resource/genshin/characters_enka.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/characters.json",
+    "src/resource/genshin/loc.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/loc.json",
+    "src/resource/genshin/AvatarExcelConfigData.json": "snowyfirefly/Liteyuki-Resource/raw/master/genshin/AvatarExcelConfigData.json",
+    "src/resource/genshin/AvatarSkillDepotExcelConfigData.json": "snowyfirefly/Liteyuki-Resource/raw/master/genshin/AvatarSkillDepotExcelConfigData.json",
 
 }

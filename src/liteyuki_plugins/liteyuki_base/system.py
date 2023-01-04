@@ -181,7 +181,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     info_canvas = Canvas(base_img)
     info_canvas.content = Panel(
         uv_size=info_canvas.base_img.size,
-        box_size=(info_canvas.base_img.size[0] - 2 * side_up, info_canvas.base_img.size[1] - 2 * side_up),
+        box_size=(info_canvas.base_img.size[0] - 2 * side_up, info_canvas.base_img.size[1] - side_up - side_down),
         parent_point=(0.5, 0.5), point=(0.5, 0.5)
     )
     content_size = info_canvas.get_actual_pixel_size("content")
@@ -288,8 +288,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         )
 
         disk_panel.usage_bg.usage_text = Text(
-            uv_size=(1, 1), box_size=(1, 0.7), parent_point=(0.5, 0.5), point=(0.5, 0.5),
-            text="%.1f%%  可用%s 总共%s" % (disk_usage.used / disk_usage.total * 100, size_text(disk_usage.free, dec=1), size_text(disk_usage.total, dec=1)), font=default_font
+            uv_size=(1, 1), box_size=(1, 0.6), parent_point=(0.5, 0.5), point=(0.5, 0.5),
+            text="%.1f%%  可用%s 共%s" % (disk_usage.used / disk_usage.total * 100, size_text(disk_usage.free, dec=1), size_text(disk_usage.total, dec=1)), font=default_font
         )
     point_y += (len(psutil.disk_partitions()) * (single_disk_high + disk_distance) + distance_of_part_3_sub_part) / part_3_pixel_size[1]
     for prop_i, prop_dict in enumerate(part_3_prop.items()):

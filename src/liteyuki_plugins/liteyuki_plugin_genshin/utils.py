@@ -2,22 +2,14 @@ import os
 
 from PIL import Image
 
+from .resource import resource
 from ...liteyuki_api.config import Path
 from ...liteyuki_api.utils import clamp, download_file, generate_signature
 
 liteyuki_sign = generate_signature + "    Powered by Enka.Network"
 data_lost = "数据缺失，请先发送「原神资源更新」以更新资源"
 uid_info_error = "UID信息不存在或Enka不稳定请求失败，请稍后再试"
-resource_pool = {
-
-    "characters.json": "https://raw.kgithub.com/mrwan200/enkanetwork.py-data/master/exports/data/characters.json",
-    "characters_enka.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/characters.json",
-    "loc.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/loc.json",
-    "AvatarExcelConfigData.json": "https://git.crepe.moe/grasscutters/Grasscutter_Resources/-/raw/3.3/Resources/ExcelBinOutput/AvatarExcelConfigData.json?inline=false",
-    "AvatarSkillDepotExcelConfigData.json": "https://git.crepe.moe/grasscutters/Grasscutter_Resources/-/raw/3.3/Resources/ExcelBinOutput/AvatarSkillDepotExcelConfigData.json"
-                                            "?inline=false",
-
-}
+resource_pool = resource
 
 """元素英文希腊语映射表"""
 elements = {

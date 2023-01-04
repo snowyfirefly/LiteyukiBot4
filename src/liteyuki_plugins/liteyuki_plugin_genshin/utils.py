@@ -10,11 +10,11 @@ data_lost = "数据缺失，请先发送「原神资源更新」以更新资源"
 uid_info_error = "UID信息不存在或Enka不稳定请求失败，请稍后再试"
 resource_pool = {
 
-    "characters.json": "https://raw.kgithub.com/mrwan200/enkanetwork.py-data/master/exports/data/characters.json",
-    "characters_enka.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/characters.json",
-    "loc.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/loc.json",
-    "AvatarExcelConfigData.json": "https://git.crepe.moe/grasscutters/Grasscutter_Resources/-/raw/3.3/Resources/ExcelBinOutput/AvatarExcelConfigData.json?inline=false",
-    "AvatarSkillDepotExcelConfigData.json": "https://git.crepe.moe/grasscutters/Grasscutter_Resources/-/raw/3.3/Resources/ExcelBinOutput/AvatarSkillDepotExcelConfigData.json"
+    "src/data/genshin/characters.json": "https://raw.kgithub.com/mrwan200/enkanetwork.py-data/master/exports/data/characters.json",
+    "src/data/genshin/characters_enka.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/characters.json",
+    "src/data/genshin/loc.json": "https://raw.kgithub.com/EnkaNetwork/API-docs/master/store/loc.json",
+    "src/data/genshin/AvatarExcelConfigData.json": "https://git.crepe.moe/grasscutters/Grasscutter_Resources/-/raw/3.3/Resources/ExcelBinOutput/AvatarExcelConfigData.json?inline=false",
+    "src/data/genshin/AvatarSkillDepotExcelConfigData.json": "https://git.crepe.moe/grasscutters/Grasscutter_Resources/-/raw/3.3/Resources/ExcelBinOutput/AvatarSkillDepotExcelConfigData.json"
                                             "?inline=false",
 
 }

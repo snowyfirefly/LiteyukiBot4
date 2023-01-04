@@ -256,7 +256,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
                         await uninstall_plugin.send("%s(%s)已从加载列表中移除但没有安装过，无法卸载" % (searched_plugin.metadata.name, searched_plugin.name))
                         suc = True
                     else:
-                        raise ImportError("插件就没装过")
+                        raise ImportError("插件从没装过")
                 except BaseException as e:
                     await uninstall_plugin.send("%s(%s)已从加载列表中移除，但卸载库时出现问题，不过无大碍")
             else:

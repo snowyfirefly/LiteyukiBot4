@@ -252,7 +252,7 @@ def generate_plugin_image(event) -> Canvas:
 
         x0 = (plugin_block_distance + columns * (plugin_block_distance + plugin_block_width)) / plugins_size[0]
         y0 = (plugin_block_distance + row * (plugin_block_distance + plugin_line_height)) / plugins_size[1]
-        rec_color = (240, 240, 240, 90 if row % 2 == 0 else 160)
+        rec_color = (0,0,0, 40 if row % 2 == 0 else 120)
         """单个插件圆角底图"""
         plugin_bg = help_canvas.content.plugins.__dict__["plugin_bg_%s" % plugin_i] = Rectangle(
             uv_size=plugins_size, box_size=(plugin_block_width, plugin_line_height), parent_point=(x0, y0), point=(0, 0), fillet=base_fillet_2, color=rec_color,

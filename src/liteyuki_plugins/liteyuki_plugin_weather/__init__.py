@@ -30,13 +30,15 @@ async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
     Data(Data.globals, "qweather").set_many_data({"key": key, "key_type": key_type})
     await set_key.send("和风天气key设置成功：%s" % ("商业版" if key_type == "com" else "开发版"))
 
+
 @bind_location.handle()
 async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
+    await key_check(bind_location)
     args, kwargs = Command.formatToCommand(str(arg))
     # 输入内容
     args_2 = Command.formatToString(*args)
     location_list = await run_sync(get_location)(args_2, **kwargs)
-    print(location_list[0].name)
+    await bind_location.send(location_list[0].name)
 
 
 __plugin_meta__ = PluginMetadata(

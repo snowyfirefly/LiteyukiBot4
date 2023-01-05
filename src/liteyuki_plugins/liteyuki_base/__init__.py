@@ -10,7 +10,7 @@ download_resource = on_command(cmd="下载资源", aliases={"更新资源"}, per
 
 @echo.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], args: Message = CommandArg()):
-    await echo.send(args)
+    await echo.send(Message(Command.escape(str(args))))
 
 
 @liteyuki.handle()
@@ -27,7 +27,7 @@ __plugin_meta__ = PluginMetadata(
     name="轻雪底层基础",
     description="以维持轻雪的正常运行，无法关闭",
     usage='•「liteyuki」测试Bot\n\n'
-          '•「echo 消息」Bot复读\n\n'
+          '•「echo 消息」Bot复读，可转CQ码\n\n'
           '•「下载资源/更新资源」解决自动资源下载失败的问题\n\n'
           '•「检查更新」检查当前版本是否为最新\n\n'
           '•「启用/停用自动更新」管理自动更新\n\n'

@@ -1,5 +1,9 @@
 # 和风天气接口
+from typing import Type
+
 import jieba
+from nonebot.internal.matcher import Matcher
+
 from .model import *
 from ...liteyuki_api.utils import *
 from ...liteyuki_api.data import Data
@@ -13,6 +17,11 @@ def jieba_cut(word: str) -> list:
     :return:
     """
     return jieba.lcut(word)
+
+
+async def key_check(matcher: Type[Matcher]):
+    if Data(Data.globals, "qweather").get_data("key") is None:
+        await matcher.finish("未配置key，轻雪天气部分查询服务无法运行！")
 
 
 def get_location(keyword: str, **kwargs) -> List[Location] | None:
@@ -40,6 +49,7 @@ def get_location(keyword: str, **kwargs) -> List[Location] | None:
         if resp.json()["code"] == "200":
             return [Location(**location) for location in resp.json()["location"]]
     return None
+
 
 def get_weather():
     pass

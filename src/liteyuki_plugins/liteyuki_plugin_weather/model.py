@@ -15,5 +15,5 @@ class Location(BaseModel):
     type: str
     rank: str
     fxLink: str
-    sources: str
-    license: str
+    sources: str = str()
+    license: str = str()

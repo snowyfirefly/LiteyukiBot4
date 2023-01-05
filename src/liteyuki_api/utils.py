@@ -185,7 +185,8 @@ class Command:
             string += Command.escape(arg) + " "
         kw_item = keywords.items()
         for item in kw_item:
-            kw = ("%s=%s" % (item[0], item[1]))
+            kw = "%s=%s" % (item[0], item[1])
+
             string += Command.escape(kw) + " "
         return string[:-1]
 

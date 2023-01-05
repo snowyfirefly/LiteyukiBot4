@@ -34,9 +34,9 @@ async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
 async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
     args, kwargs = Command.formatToCommand(str(arg))
     # 输入内容
-    args_2 = Command.formatToString(args)
-    location_list = await run_sync(get_location(args_2, **kwargs))
-    print(location_list)
+    args_2 = Command.formatToString(*args)
+    location_list = await run_sync(get_location)(args_2, **kwargs)
+    print(location_list[0].name)
 
 
 __plugin_meta__ = PluginMetadata(

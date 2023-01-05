@@ -219,6 +219,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         uv_size=(1, content_size[1]), box_size=(1, hardware_high),
         parent_point=(0.5, (head_high + block_distance) / content_size[1]), point=(0.5, 0), fillet=part_fillet, color=(0, 0, 0, block_alpha)
     )
+
+    # percent为0-1的float
     hardware_part = [
         {
             "name": "CPU",

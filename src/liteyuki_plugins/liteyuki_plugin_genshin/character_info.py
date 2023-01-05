@@ -19,14 +19,8 @@ from ...liteyuki_api.data import Data
 
 async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], matcher: Type[Matcher]):
     character_card = matcher
-    file_pool = {}
-    for f in resource_pool.keys():
-        whole_path=os.path.join(Path.root,f)
-        print(whole_path)
-        if os.path.exists(whole_path):
-            file_pool[f] = json.load(open(whole_path, encoding="utf-8"))
-        else:
-            await character_card.finish(data_lost+whole_path, at_sender=True)
+    file_pool = await load_resource(matcher)
+
     args, kwargs = Command.formatToCommand(event.raw_message)
     character_name_input = args[0].strip().replace("面板", "").replace("#", "")
     if character_name_input == "更新":
@@ -569,101 +563,3 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
         await bot.delete_msg(message_id=msg_id)
         await character_card.finish("数据资源可能缺失或出现错误，请检查:%s\n请尝试发送「原神资源更新」以更新资源" % traceback.format_exception(e), at_sender=True)
 
-
-async def character_data_handle(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], matcher: Type[Matcher]):
-    character_data = matcher
-    file_pool = {}
-    for f in resource_pool.keys():
-        if os.path.exists(os.path.join(Path.root, f)):
-            file_pool[f] = json.load(open(os.path.join(Path.root, f), encoding="utf-8"))
-        else:
-            await character_data.finish(data_lost, at_sender=True)
-    args, kwargs = Command.formatToCommand(event.raw_message)
-    character_name_input = args[0].strip().replace("角色数据", "")
-    _break = False
-    lang = "zh-CN"
-    hash_id = str()
-    entry = str()
-
-    """旅行者判定"""
-    if character_name_input in ["荧", "空"]:
-        character_name_input = "旅行者"
-
-    """遍历loc.json从输入的角色名查询词条的hash_id"""
-    for lang, lang_data in file_pool["loc.json"].items():
-        for hash_id, entry in lang_data.items():
-            if character_name_input == entry:
-                _break = True
-                break
-        if _break:
-            break
-    else:
-        """从别称数据中查找hash_id"""
-        for hash_id, aliases_list in Data(Data.globals, "genshin_game_data").get_data(key="character_aliases", default={}).items():
-            if character_name_input in aliases_list:
-                break
-        else:
-            await character_data.finish("角色名不存在或资源未更新", at_sender=True)
-    lang = kwargs.get("lang", Data(Data.users, event.user_id).get_data(key="genshin.lang", default=lang))
-    character_hash_id = hash_id
-
-    character_id = 0
-    character = {}
-    """遍历character.json，获取角色id"""
-    for character_id, character in file_pool["characters_enka.json"].items():
-        if int(hash_id) == character["NameTextMapHash"]:
-            character_id = character_id
-            break
-    else:
-        await character_data.finish("角色名不存在或资源未更新", at_sender=True)
-
-    """uid判定"""
-    uid = kwargs.get("uid", Data(Data.users, event.user_id).get_data(key="genshin.uid", default=None))
-    if uid is None:
-        await character_data.finish("命令参数中未包含uid且未绑定过uid", at_sender=True)
-    else:
-        uid = int(uid)
-
-    """先在本地查找角色数据，没有再在线请求"""
-    global_db = Data(Data.globals, "genshin_player_data")
-    local_data = global_db.get_data(str(uid), None)
-    if local_data is not None and int(character_id) in [avatar["avatarId"] for avatar in local_data.get("avatarInfoList", [])]:
-        player_data = local_data
-    else:
-        async with aiohttp.request("GET", url="https://enka.network/u/%s/__data.json" % uid) as resp:
-            player_data = await resp.json()
-            player_data["time"] = list(time.localtime())[0:5]
-
-    """uid真实性判定"""
-    if "playerInfo" not in player_data:
-        await character_data.finish("uid信息不存在", at_sender=True)
-    """角色展示判定i"""
-    if "avatarInfoList" not in player_data:
-        await character_data.finish(
-            MessageSegment.text("请在游戏中显示角色详情") + MessageSegment.image(file="file:///%s" % os.path.join(Path.res, "textures", "genshin", "open_details.png")),
-            at_sender=True)
-    """ 判断旅行者"""
-    is_traveler = False
-    if character_id in ["10000005", "10000007"]:
-        is_traveler = True
-
-    user_character = {}
-    for user_character in player_data["avatarInfoList"]:
-        if user_character["avatarId"] == int(character_id) or user_character["avatarId"] in [10000005, 10000007] and is_traveler:
-            if is_traveler:
-                await character_data.finish("暂不支持查询旅行者面板", at_sender=True)
-            break
-    else:
-        await character_data.finish("你的展板中没有此角色,请展示后发送「原神数据」以更新面板", at_sender=True)
-
-    """角色在资源中的数据"""
-    enka_character_data = character
-    """玩家角色面板数据，来自enka"""
-    player_character_data = user_character
-    name = file_pool["loc.json"].get(lang).get(hash_id)
-    save_path = os.path.join(Path.cache, "uid%s_%s.json" % (uid, name))
-    json.dump(fp=open(save_path, "w", encoding="utf-8"), obj=player_character_data, ensure_ascii=False, indent=4)
-    if event.message_type == "private":
-        await bot.call_api("upload_private_file", user_id=event.user_id, file="%s" % save_path, name="uid%s_%s.json" % (uid, name))
-    else:
-        await bot.call_api("upload_group_file", group_id=event.group_id, file="%s" % save_path, name="uid%s_%s.json" % (uid, name))

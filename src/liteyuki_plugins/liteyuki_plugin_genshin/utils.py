@@ -1,3 +1,4 @@
+import json
 import os
 
 from PIL import Image
@@ -74,6 +75,17 @@ def get_lang_word(key: str, lang: str = "zh-CN", loc=None):
     if loc is None:
         loc = {}
     return loc.get(lang, loc["en"]).get(key, "Id not existing")
+
+
+async def load_resource(matcher):
+    file_pool = {}
+    for f in resource_pool.keys():
+        whole_path = os.path.join(Path.root, f)
+        if os.path.exists(whole_path):
+            file_pool[os.path.basename(f)] = json.load(open(whole_path, encoding="utf-8"))
+        else:
+            await matcher.finish(data_lost + whole_path, at_sender=True)
+    return file_pool
 
 
 def enka_resource_detect(texture: str):

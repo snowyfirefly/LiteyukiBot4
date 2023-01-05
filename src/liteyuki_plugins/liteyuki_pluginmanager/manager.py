@@ -16,7 +16,7 @@ driver = get_driver()
 from .autorun import *
 from .plugin_api import *
 
-bot_help = on_command(cmd="help", aliases={"#帮助", "#列出插件", "#插件列表", "#全部插件", "帮助"})
+bot_help = on_command(cmd="help", aliases={ "帮助", "菜单", "插件列表"})
 enable_plugin = on_command(cmd="#启用", aliases={"#停用"}, permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN | PRIVATE_FRIEND)
 add_meta_data = on_command(cmd="#添加插件元数据", permission=SUPERUSER)
 del_meta_data = on_command(cmd="#删除插件元数据", permission=SUPERUSER)
@@ -33,7 +33,7 @@ install_all_plugin = on_command("#安装全部", permission=SUPERUSER)
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
     if str(arg).strip() == "":
         try:
-            if "#全部插件" in event.raw_message:
+            if "全部插件" in event.raw_message:
                 raise KeyError("全部插件")
             canvas = generate_plugin_image(event)
             file = canvas.export_cache()

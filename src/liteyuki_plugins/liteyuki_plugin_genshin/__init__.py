@@ -18,17 +18,11 @@ update_resource = on_command(cmd="原神资源更新", block=True, permission=SU
 character_img = on_message(rule=args_end_with("立绘"), block=True)
 add_aliases = on_command(cmd="添加别称", block=True, permission=SUPERUSER)
 character_card = on_message(rule=args_end_with("面板"))
-character_data = on_message(rule=args_end_with("角色数据"))
 
 
 @character_card.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     await character_card_handle(bot, event, character_card)
-
-
-@character_data.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
-    await character_data_handle(bot, event, character_data)
 
 
 @set_uid.handle()
@@ -151,9 +145,8 @@ __plugin_meta__ = PluginMetadata(
     usage="命令：\n"
           "•「原神资源更新」更新本地的资源文件\n\n"
           "•「xx面板」查看角色面板\n"
-          "•「xx角色数据]获取角色原始数据文件\n"
-          "•「原神数据 [uid]」更新原神角色展示框中的数据,默认为绑定的uid\n"
-          "•「绑定uid 000000000」绑定自己的uid\n"
+          "•「原神数据|更新数据 [uid]」更新原神角色展示框中的数据,默认为绑定的uid\n"
+          "•「绑定uid xxx」绑定自己的uid\n"
           "•「添加别称 角色名 别称1 别称2...」在查询面板时可以用别称查询\n"
           "•「xx立绘」获取角色立绘图\n"
           "•可以在「绑定uid」空格后接「lang=xx」来指定语言，可选的语言有：\n"

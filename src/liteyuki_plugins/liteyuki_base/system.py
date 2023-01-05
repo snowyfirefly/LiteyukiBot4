@@ -41,7 +41,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     check_url = "https://gitee.com/snowykami/liteyuki-bot/raw/master/src/config/config.json"
     local_version_id: int = config_data.get("version_id", None)
     local_version_name: str = config_data.get("version_name", None)
-    resp = await run_sync(simple_request)(check_url)
+    resp = await run_sync(simple_request_get)(check_url)
     resp_data = resp.json()
     msg = "当前版本：%s(%s)\n仓库版本：%s(%s)" % (local_version_name, local_version_id, resp_data.get("version_name"), resp_data.get("version_id"))
     if resp_data.get("version_id") > local_version_id:
@@ -54,7 +54,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
     check_url = "https://gitee.com/snowykami/liteyuki-bot/raw/master/src/config/config.json"
     local_version_id: int = config_data.get("version_id", None)
     local_version_name: str = config_data.get("version_name", None)
-    resp = await run_sync(simple_request)(check_url)
+    resp = await run_sync(simple_request_get)(check_url)
     resp_data = resp.json()
     await update.send("开始更新:\n当前：%s(%s)\n更新：%s(%s)" % (local_version_name, local_version_id, resp_data.get("version_name"), resp_data.get("version_id")), at_sender=True)
     await run_sync(os.system)("git pull --force https://gitee.com/snowykami/liteyuki-bot.git")

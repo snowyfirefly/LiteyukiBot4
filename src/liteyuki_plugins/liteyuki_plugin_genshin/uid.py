@@ -3,7 +3,7 @@ from nonebot.utils import run_sync
 
 from .utils import uid_info_error, servers
 from ...liteyuki_api.data import Data
-from ...liteyuki_api.utils import Command, simple_request
+from ...liteyuki_api.utils import Command, simple_request_get
 
 
 async def set_uid_handle(bot, event, matcher, args):
@@ -13,7 +13,7 @@ async def set_uid_handle(bot, event, matcher, args):
         await set_uid.finish("uid格式错误", at_sender=True)
     else:
         uid = int(args[0])
-        player_data = (await run_sync(simple_request)(f"https://enka.network/u/{uid}/__data.json")).json()
+        player_data = (await run_sync(simple_request_get)(f"https://enka.network/u/{uid}/__data.json")).json()
 
         if "playerInfo" not in player_data:
             await set_uid.finish(uid_info_error, at_sender=True)

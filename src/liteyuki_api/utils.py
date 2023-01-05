@@ -4,8 +4,9 @@ from typing import Tuple, Dict, List, Iterable
 
 import nonebot
 import requests
+from aiohttp.client_reqrep import ClientResponse
 from requests import Response
-
+import aiohttp
 from .canvas import Text
 from .config import config_data
 
@@ -46,9 +47,15 @@ def download_file(url, file, chunk_size=1024):
         nonebot.logger.warning("下载失败: %s\n%s" % (url, traceback.format_exception(e)))
 
 
-def simple_request(url, **kwargs) -> Response:
+def simple_request_get(url, **kwargs) -> Response:
+    """同步简易请求函数"""
     resp = requests.get(url, **kwargs)
     return resp
+
+async def simple_request_async(method, url, **kwargs):
+    """异步简易请求函数"""
+    async with aiohttp.request(method, url, **kwargs) as resp:
+        return resp
 
 
 def size_text(byte: int, dec: int = 2) -> str:

@@ -60,13 +60,13 @@ def search_for_plugin(keyword: str) -> Union[Plugin, None]:
     return None
 
 
-def get_plugin(plugin_name) -> Plugin:
+def get_plugin(plugin_id) -> Plugin:
     """
     通过插件名获取插件
-    :param plugin_name:
+    :param plugin_id:
     :return:
     """
-    return plugins[plugin_name]
+    return plugins[plugin_id]
 
 
 def get_loaded_plugin_by_liteyuki() -> List[Plugin]:
@@ -102,18 +102,18 @@ def get_plugin_default_stats(plugin_name) -> bool:
     return default_enable
 
 
-def check_enabled_stats(event: Union[GroupMessageEvent, PrivateMessageEvent], plugin_name) -> bool:
+def check_enabled_stats(event: Union[GroupMessageEvent, PrivateMessageEvent], plugin_id) -> bool:
     """
     检查返回插件是否启用
     :param event: 会话
-    :param plugin_name:
+    :param plugin_id:
     :return:
     """
     db = Data(*Data.get_type_id(event))
     enabled_plugin = db.get_data("enabled_plugin", [])
     disabled_plugin = db.get_data("disabled_plugin", [])
-    default_enable = get_plugin_default_stats(plugin_name)
-    if default_enable and plugin_name not in disabled_plugin or not default_enable and plugin_name in enabled_plugin:
+    default_enable = get_plugin_default_stats(plugin_id)
+    if default_enable and plugin_id not in disabled_plugin or not default_enable and plugin_id in enabled_plugin:
         return True
     else:
         return False
@@ -279,6 +279,17 @@ def generate_plugin_image(event) -> Canvas:
             plugin_font_size = help_canvas.get_control_by_path("content.plugins.plugin_bg_%s.plugin_name" % plugin_i).font_size
 
     return help_canvas
+
+
+def generate_single_plugin_document(show_name: str, plugin_id: str, usage: str, enable: str) -> Canvas:
+    """
+    :param show_name: 展示名，如轻雪插件
+    :param plugin_id: 插件id，如liteyuki_plugin_1
+    :param usage: 使用方法文本
+    :param enable: 是否启用
+    :return:
+    """
+    pass
 
 
 def search_plugin_info_online(plugin_name, search_list=None) -> List[Dict] | None:

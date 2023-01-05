@@ -1,12 +1,14 @@
-import os
-from typing import Any, Union
+from typing import Any, Union, Tuple, Dict
+
 import nonebot
-from nonebot.adapters.onebot.v11.event import GroupMessageEvent, PrivateMessageEvent
-from .config import config_data, Path
 import pymongo
-import sqlite3
+from nonebot.adapters.onebot.v11.event import GroupMessageEvent, PrivateMessageEvent
+
+from .config import config_data
+
 LiteyukiDB = pymongo.MongoClient(config_data["mongodb"])["liteyuki"]
 nonebot.logger.info("已连接到数据库：%s" % config_data["mongodb"])
+
 
 class Data:
     users = "users"
@@ -27,18 +29,32 @@ class Data:
 
     def get_data(self, key, default=None) -> Any:
         key = key.replace(".", "_")
-        if self.database_name not in LiteyukiDB.list_collection_names():
+        document = self.collection.find_one({"_id": self._id})
+        if document is None:
             return default
         else:
-            document = LiteyukiDB[self.database_name].find_one({"_id": self._id})
+            return document.get(key, default)
+
+    def get_many_data(self, key_data=Dict[str, Any]) -> Tuple:
+        """
+        :param key_data: {key1: default1, key2: default2}
+        :return:
+        """
+        document = self.collection.find_one({"_id": self._id})
+        value = []
+        for key, default in key_data.items():
             if document is None:
-                return default
+                value.append(default)
             else:
-                return document.get(key, default)
+                value.append(document.get(key, default))
+        return tuple(value)
 
     def set_data(self, key, value):
         key = key.replace(".", "_")
         self.collection.update_one({"_id": self._id}, {"$set": {key: value}}, upsert=True)
+
+    def set_many_data(self, data: dict):
+        self.collection.update_many({"_id": self._id}, {"$set": data}, upsert=True)
 
     def del_data(self, key):
         key = key.replace(".", "_")

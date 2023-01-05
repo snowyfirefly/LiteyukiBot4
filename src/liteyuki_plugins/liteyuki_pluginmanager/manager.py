@@ -59,14 +59,21 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
             msg += "\n•使用「help插件名」来获取对应插件的使用方法\n"
             await bot_help.send(message=msg)
     else:
+        "单插件帮助"
         plugin_name_input = str(arg).strip()
         plugin_ = search_for_plugin(plugin_name_input)
         if plugin_ is None:
             await bot_help.finish("插件不存在", at_sender=True)
         else:
             if plugin_.metadata is not None or metadata_db.get_data(plugin_.name) is not None:
+
                 if metadata_db.get_data(plugin_.name) is not None:
                     plugin_.metadata = PluginMetadata(**metadata_db.get_data(plugin_.name))
+                plugin_id = plugin_.name
+                plugin_show_name = plugin_.metadata.name
+                plugin_usage = plugin_.metadata.usage
+                plugin_extra = plugin_.metadata.extra
+                plugin_state = check_enabled_stats(event, plugin_id)
                 await bot_help.finish("•%s\n「%s」\n==========\n使用方法\n%s" % (plugin_.metadata.name, plugin_.metadata.description, str(plugin_.metadata.usage)))
             else:
                 await bot_help.finish("%s还没有编写使用方法" % plugin_.name)

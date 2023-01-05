@@ -293,7 +293,6 @@ def search_plugin_info_online(plugin_name, search_list=None) -> List[Dict] | Non
     if search_list is None:
         search_list = get_online_plugin_list()
     for plugin_data in search_list:
-        print(plugin_name, plugin_data["id"])
         if plugin_name in plugin_data["name"] or plugin_name in plugin_data["id"].replace("-", "_") or plugin_name in plugin_data["description"]:
             data.append(plugin_data)
     if len(data) > 0:

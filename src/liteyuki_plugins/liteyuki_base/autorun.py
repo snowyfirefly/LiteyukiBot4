@@ -1,10 +1,33 @@
 import time
 
+from nonebot.adapters.onebot.v11.bot import Bot
+from nonebot.exception import IgnoredException
+from nonebot.internal.matcher import Matcher
+from nonebot.message import run_preprocessor, event_preprocessor
 from nonebot import get_driver, get_bots
 from nonebot import get_bot
+from nonebot.typing import T_State
+
 from ...liteyuki_api.data import *
+
 driver = get_driver()
+
+
 # 保存启动时间
 @driver.on_startup
 async def _():
     Data(Data.globals, "liteyuki").set_data("start_time", list(time.localtime())[0:6])
+
+
+@run_preprocessor
+async def _(matcher: Matcher, bot: Bot, event: Union[GroupMessageEvent], state: T_State):
+    white_list = [
+        "liteyuki_base"
+    ]
+    if matcher.plugin_name not in white_list:
+        if Data(Data.groups, event.group_id).get_data("enable", True):
+            pass
+        else:
+            raise IgnoredException
+    else:
+        pass

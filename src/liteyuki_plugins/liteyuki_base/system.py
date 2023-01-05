@@ -28,9 +28,10 @@ set_auto_update = on_command("启用自动更新", aliases={"停用自动更新"
 update = on_command("#update", aliases={"#轻雪更新"}, permission=SUPERUSER)
 restart = on_command("#restart", aliases={"#轻雪重启"}, permission=SUPERUSER)
 export_database = on_command("#export", aliases={"#导出数据"}, permission=SUPERUSER)
-liteyuki_bot_info = on_command("#info", aliases={"#轻雪信息", "#轻雪状态"}, permission=SUPERUSER)
+liteyuki_bot_info = on_command("#state", aliases={"#轻雪信息", "#轻雪状态"})
 clear_cache = on_command("#清除缓存", permission=SUPERUSER)
 self_destroy = on_command("#轻雪自毁", permission=SUPERUSER)
+enable_group = on_command("#群聊启用", aliases={"#群聊停用"}, permission=SUPERUSER)
 
 data_importer = on_notice()
 
@@ -221,11 +222,11 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     hardware_part = [
         {
             "name": "CPU",
-            "percent": sum(psutil.cpu_percent(percpu=True)),
+            "percent": psutil.cpu_percent(),
             "sub_prop": [
                 "物理核心 %s" % psutil.cpu_count(logical=False),
                 "逻辑处理器 %s" % psutil.cpu_count(),
-                "%sMhz" % average(psutil.cpu_freq())
+                "%sMHz" % average(psutil.cpu_freq())
             ]
         },
         {
@@ -253,7 +254,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
         part.arc_bg.arc_up = Img(uv_size=(1, 1), box_size=(1, 1), parent_point=(0.5, 0.5), point=(0.5, 0.5), img=arc_up)
         part.arc_bg.percent_text = Text(
-            uv_size=(1, 1), box_size=(0.55, 0.2), parent_point=(0.5, 0.5), point=(0.5, 0.5), text="%.1f" % sub_part["percent"] + "%", font=default_font, dp=1
+            uv_size=(1, 1), box_size=(0.55, 0.15), parent_point=(0.5, 0.5), point=(0.5, 0.5), text="%.1f" % sub_part["percent"] + "%", font=default_font, dp=1, force_size=True
         )
         arc_pos = info_canvas.get_parent_box("content.hardware.part_%s.arc_bg" % part_i)
         part.name = Text(uv_size=(1, 1), box_size=(1, 0.08), parent_point=(0.5, arc_pos[3] + 0.03), point=(0.5, 0), text=sub_part["name"], force_size=True, font=default_font)

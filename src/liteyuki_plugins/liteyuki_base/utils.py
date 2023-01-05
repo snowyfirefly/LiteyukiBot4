@@ -13,11 +13,11 @@ def restart_bot():
 
 def get_usage_percent_color(percent):
     if percent < 40:
-        arc_color = (0, 255, 0, 255)
+        arc_color = Color.hex2dec("FF55AF7B")
     elif percent < 60:
-        arc_color = Color.hex2dec("FFFFD500")
+        arc_color = Color.hex2dec("FFFAC230")
     elif percent < 80:
-        arc_color = Color.hex2dec("FFFF8516")
+        arc_color = Color.hex2dec("FFFA9D5A")
     else:
-        arc_color = (255, 0, 0, 255)
+        arc_color = Color.hex2dec("FFEB4537")
     return arc_color

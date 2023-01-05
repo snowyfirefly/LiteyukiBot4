@@ -28,9 +28,10 @@ set_auto_update = on_command("启用自动更新", aliases={"停用自动更新"
 update = on_command("#update", aliases={"#轻雪更新"}, permission=SUPERUSER)
 restart = on_command("#restart", aliases={"#轻雪重启"}, permission=SUPERUSER)
 export_database = on_command("#export", aliases={"#导出数据"}, permission=SUPERUSER)
-liteyuki_bot_info = on_command("#info", aliases={"#轻雪信息", "#轻雪状态"}, permission=SUPERUSER)
+liteyuki_bot_info = on_command("#state", aliases={"#轻雪信息", "#轻雪状态"})
 clear_cache = on_command("#清除缓存", permission=SUPERUSER)
 self_destroy = on_command("#轻雪自毁", permission=SUPERUSER)
+enable_group = on_command("#群聊启用", aliases={"#群聊停用"}, permission=SUPERUSER)
 
 data_importer = on_notice()
 

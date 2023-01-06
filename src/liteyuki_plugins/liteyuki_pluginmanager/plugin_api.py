@@ -25,61 +25,48 @@ def search_for_plugin(keyword: str) -> Union[Plugin, None]:
     :return:
     """
     # 精准搜搜
-    for p in get_loaded_plugins():
+    for p in get_loaded_plugin_by_liteyuki():
         """关键词==插件id名"""
-        if keyword == p.name:
-            if p.metadata is None:
-                p.metadata = PluginMetadata(name=p.name, description="无", usage="无", extra={"metadata": None})
+        if keyword == p.name or keyword == p.metadata.name:
             return p
-        # 关键词==配置插件名
-        elif p.metadata is not None:
-            if keyword == p.metadata.name:
-                return p
-        # 关键词==自定义元数据插件名
-        elif metadata_db.get_data(p.name) is not None:
-            meta_data = PluginMetadata(**metadata_db.get_data(p.name))
-            if keyword == meta_data.name:
-                p.metadata = meta_data
-                return p
-
     # 模糊搜索
-    for p in get_loaded_plugins():
-        if keyword in p.name:
-            if p.metadata is None:
-                p.metadata = PluginMetadata(name=p.name, description="无", usage="无", extra={"metadata": None})
+    for p in get_loaded_plugin_by_liteyuki():
+        if keyword in p.name or keyword in p.metadata.name:
             return p
-        elif p.metadata is not None:
-            if keyword in p.metadata.name:
-                return p
-        elif metadata_db.get_data(p.name) is not None:
-            meta_data = PluginMetadata(**metadata_db.get_data(p.name))
-            if keyword in meta_data.name:
-                p.metadata = meta_data
-                return p
-
     return None
 
 
-def get_plugin(plugin_id) -> Plugin:
+def get_plugin(plugin_id, metadata=True) -> Plugin:
     """
     通过插件名获取插件
+    :param metadata: 有自定义元数据时是否加入
     :param plugin_id:
     :return:
     """
-    return plugins[plugin_id]
+    for _plugin in get_loaded_plugin_by_liteyuki():
+        if _plugin.name == plugin_id:
+            return _plugin
 
 
 def get_loaded_plugin_by_liteyuki() -> List[Plugin]:
     """
-    给插件自动添加元数据
+    获取插件列表
+    顺便给插件自动添加元数据
 
     :return:
     """
     plugin_list = []
     for _plugin in get_loaded_plugins():
         if _plugin.metadata is None:
-            if metadata_db.get_data(_plugin.name) is not None:
-                _plugin.metadata = PluginMetadata(**metadata_db.get_data(_plugin.name))
+            metadata_base = {
+                "name": "",
+                "description": "",
+                "usage": ""
+            }
+            custom_metadata = metadata_db.get_data(_plugin.name)
+            if custom_metadata is not None:
+                metadata_base.update(custom_metadata)
+                _plugin.metadata = PluginMetadata(**metadata_base)
             else:
                 _plugin.metadata = PluginMetadata(
                     name=_plugin.name,
@@ -95,10 +82,7 @@ def get_loaded_plugin_by_liteyuki() -> List[Plugin]:
 
 def get_plugin_default_stats(plugin_name) -> bool:
     plugin = get_plugin(plugin_name)
-    if plugin.metadata is not None:
-        default_enable = plugin.metadata.extra.get("default_enable", True)
-    else:
-        default_enable = True
+    default_enable = plugin.metadata.extra.get("default_enable", True)
     return default_enable
 
 
@@ -121,7 +105,7 @@ def check_enabled_stats(event: Union[GroupMessageEvent, PrivateMessageEvent], pl
 
 def generate_plugin_image(event) -> Canvas:
     """排序，把轻雪插件排到前面来"""
-    loaded_plugins = get_loaded_plugins()
+    loaded_plugins = get_loaded_plugin_by_liteyuki()
     """隐藏的插件列表"""
     hidden_plugins_store = Data(Data.globals, "plugin_data").get_data("hidden_plugin", [])
     """实际上加载的隐藏插件"""
@@ -132,11 +116,11 @@ def generate_plugin_image(event) -> Canvas:
     for _plugin in loaded_plugins:
         if _plugin.name in hidden_plugins_store:
             hidden_plugins_loaded.append(_plugin)
-        if _plugin.metadata is not None and _plugin.metadata.extra.get("liteyuki_plugin", False) and _plugin.name not in hidden_plugins_store:
+        if _plugin.metadata.extra.get("liteyuki_plugin", False) and _plugin.name not in hidden_plugins_store:
             loaded_plugins_visible_sorted.append(_plugin)
     """再排其他插件"""
     for _plugin in loaded_plugins:
-        if _plugin.metadata is not None and _plugin.metadata.extra.get("liteyuki_plugin", False):
+        if _plugin.metadata.extra.get("liteyuki_plugin", False):
             pass
         else:
             if _plugin.name not in hidden_plugins_store:
@@ -240,11 +224,7 @@ def generate_plugin_image(event) -> Canvas:
     plugins_size = help_canvas.get_actual_pixel_size("content.plugins.img")
     plugin_block_width = int((plugins_size[0] - (count_for_each_line + 1) * plugin_block_distance) / count_for_each_line)
     for plugin_i, plugin in enumerate(loaded_plugins_visible_sorted):
-        plugin_show_name = plugin.name
-        if plugin.metadata is not None:
-            plugin_show_name = plugin.metadata.name
-        if metadata_db.get_data(plugin.name) is not None:
-            plugin_show_name = PluginMetadata(**metadata_db.get_data(plugin.name)).name
+        plugin_show_name = plugin.metadata.name
         """行数,0开始"""
         row = plugin_i // count_for_each_line
         """列数,0开始"""
@@ -252,7 +232,7 @@ def generate_plugin_image(event) -> Canvas:
 
         x0 = (plugin_block_distance + columns * (plugin_block_distance + plugin_block_width)) / plugins_size[0]
         y0 = (plugin_block_distance + row * (plugin_block_distance + plugin_line_height)) / plugins_size[1]
-        rec_color = (0,0,0, 40 if row % 2 == 0 else 120)
+        rec_color = (0, 0, 0, 40 if row % 2 == 0 else 120)
         """单个插件圆角底图"""
         plugin_bg = help_canvas.content.plugins.__dict__["plugin_bg_%s" % plugin_i] = Rectangle(
             uv_size=plugins_size, box_size=(plugin_block_width, plugin_line_height), parent_point=(x0, y0), point=(0, 0), fillet=base_fillet_2, color=rec_color,

@@ -4,7 +4,6 @@ import traceback
 import nonebot
 from nonebot import get_driver
 from nonebot import on_command
-from nonebot import plugin
 from nonebot.adapters.onebot.v11 import Bot, Message, GROUP_OWNER, GROUP_ADMIN, PRIVATE_FRIEND
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
@@ -16,8 +15,9 @@ driver = get_driver()
 from .autorun import *
 from .plugin_api import *
 
-bot_help = on_command(cmd="help", aliases={ "帮助", "菜单", "插件列表"})
+bot_help = on_command(cmd="help", aliases={"帮助", "菜单", "插件列表"})
 enable_plugin = on_command(cmd="#启用", aliases={"#停用"}, permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN | PRIVATE_FRIEND)
+global_enable_plugin = on_command(cmd="#全局启用", aliases={"#全局停用"}, permission=SUPERUSER)
 add_meta_data = on_command(cmd="#添加插件元数据", permission=SUPERUSER)
 del_meta_data = on_command(cmd="#删除插件元数据", permission=SUPERUSER)
 hidden_plugin = on_command(cmd="#隐藏插件", permission=SUPERUSER)
@@ -44,17 +44,11 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
             print(e.__repr__())
             traceback.format_exception(e)
             _hidden_plugin = Data(Data.globals, "plugin_data").get_data(key="hidden_plugin", default=[])
-            msg = "加载插件数：%s" % len(plugin.get_loaded_plugins())
-            for _plugin in plugin.get_loaded_plugins():
+            msg = "加载插件数：%s" % len(get_loaded_plugin_by_liteyuki())
+            for _plugin in get_loaded_plugin_by_liteyuki():
                 hidden_stats = "隐" if _plugin.name in _hidden_plugin else "显"
                 enable_stats = "开" if check_enabled_stats(event, _plugin.name) else "关"
-                if _plugin.metadata is not None:
-                    p_name = _plugin.metadata.name
-                else:
-                    if metadata_db.get_data(_plugin.name) is not None:
-                        p_name = PluginMetadata(**metadata_db.get_data(_plugin.name)).name
-                    else:
-                        p_name = _plugin.name
+                p_name = _plugin.metadata.name
                 msg += "\n[%s|%s]%s" % (enable_stats, hidden_stats, p_name)
             msg += "\n•使用「help插件名」来获取对应插件的使用方法\n"
             await bot_help.send(message=msg)
@@ -65,18 +59,12 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
         if plugin_ is None:
             await bot_help.finish("插件不存在", at_sender=True)
         else:
-            if plugin_.metadata is not None or metadata_db.get_data(plugin_.name) is not None:
-
-                if metadata_db.get_data(plugin_.name) is not None:
-                    plugin_.metadata = PluginMetadata(**metadata_db.get_data(plugin_.name))
-                plugin_id = plugin_.name
-                plugin_show_name = plugin_.metadata.name
-                plugin_usage = plugin_.metadata.usage
-                plugin_extra = plugin_.metadata.extra
-                plugin_state = check_enabled_stats(event, plugin_id)
-                await bot_help.finish("•%s\n「%s」\n==========\n使用方法\n%s" % (plugin_.metadata.name, plugin_.metadata.description, str(plugin_.metadata.usage)))
-            else:
-                await bot_help.finish("%s还没有编写使用方法" % plugin_.name)
+            plugin_id = plugin_.name
+            plugin_show_name = plugin_.metadata.name
+            plugin_usage = plugin_.metadata.usage
+            plugin_extra = plugin_.metadata.extra
+            plugin_state = check_enabled_stats(event, plugin_id)
+            await bot_help.finish("•%s\n「%s」\n==========\n使用方法\n%s" % (plugin_.metadata.name, plugin_.metadata.description, str(plugin_.metadata.usage)))
 
 
 # 启用插件
@@ -98,9 +86,9 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
             force_enable = searched_plugin.metadata.extra.get("force_enable", False)
         stats = check_enabled_stats(event, searched_plugin.name)
         if force_enable:
-            await enable_plugin.finish("「%s」处于强制启用状态，无法更改" % show_name, at_sender=True)
+            await enable_plugin.finish(f"「{show_name}」处于强制启用状态，无法更改", at_sender=True)
         if stats == enable:
-            await enable_plugin.finish("「%s」处于%s状态，无需重复操作" % (show_name, "启用" if stats else "停用"), at_sender=True)
+            await enable_plugin.finish(f"「{show_name}」处于{'启用' if stats else '停用'}状态，无需重复操作", at_sender=True)
         else:
             db = Data(*Data.get_type_id(event))
             enabled_plugin = db.get_data("enabled_plugin", [])
@@ -118,7 +106,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
                     enabled_plugin.remove(searched_plugin.name)
             db.set_data(key="enabled_plugin", value=enabled_plugin)
             db.set_data(key="disabled_plugin", value=disabled_plugin)
-            await enable_plugin.finish("「%s」%s成功" % (show_name, "启用" if enable else "停用"), at_sender=True)
+            await enable_plugin.finish(f"「{show_name}」{'启用' if enable else '停用'}成功", at_sender=True)
     else:
         await enable_plugin.finish("插件不存在", at_sender=True)
 
@@ -126,17 +114,22 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
 # 添加元数据
 @add_meta_data.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
-    arg = Command.escape(str(arg))
-    arg_line = arg.splitlines()
-    plugin_name_input = arg_line[0]
+    args, kwargs = Command.formatToCommand(Command.escape(str(arg)))
+    if len(args) <= 1 or args[1] not in ["name", "description", "usage"]:
+        await add_meta_data.finish("元数据参数有误", at_sender=True)
+    plugin_name_input = args[0]
+    key = args[1]
+    value = args[2]
     _plugin = search_for_plugin(plugin_name_input)
     if _plugin is None:
-        await add_meta_data.send("插件不存在", at_sender=True)
-    if _plugin.metadata is not None:
-        await add_meta_data.send("插件源码中已存在元数据", at_sender=True)
-    meta_data = {"name": arg_line[1], "description": arg_line[2], "usage": "\n".join(arg_line[3:])}
-    Data(Data.globals, "plugin_metadata").set_data(_plugin.name, meta_data)
-    await add_meta_data.send("「%s」元数据添加成功" % _plugin.name, at_sender=True)
+        await add_meta_data.finish("插件不存在", at_sender=True)
+    updated_data = {
+        key: value
+    }
+    old_data: dict = metadata_db.get_data(_plugin.name, {})
+    old_data.update(**updated_data)
+    metadata_db.set_data(_plugin.name, old_data)
+    await add_meta_data.finish(f"{_plugin.metadata.name}元数据更新成功：{key}:{value}")
 
 
 # 删除元数据

@@ -28,9 +28,9 @@ __plugin_meta__ = PluginMetadata(
     description="以维持轻雪的正常运行，无法关闭",
     usage='•「liteyuki」测试Bot\n\n'
           '•「echo 消息」Bot复读，可转CQ码\n\n'
-          '•「#更新/#update/轻雪更新」手动更新\n\n'
-          '•「#重启/#reboot/轻雪重启」手动重启\n\n'
-          '•「#状态/#state/轻雪状态」查看状态\n\n'
+          '•「#更新/update/轻雪更新」手动更新\n\n'
+          '•「#重启/reboot/轻雪重启」手动重启\n\n'
+          '•「#状态/state/轻雪状态」查看状态\n\n'
           '•「下载资源/更新资源」解决自动资源下载失败的问题\n\n'
           '•「检查更新」检查当前版本是否为最新\n\n'
           '•「启用/停用自动更新」管理自动更新\n\n'

@@ -15,11 +15,11 @@ driver = get_driver()
 from .autorun import *
 from .plugin_api import *
 
-bot_help = on_command(cmd="help", aliases={"帮助", "菜单", "插件列表"})
+bot_help = on_command(cmd="help", aliases={"帮助", "菜单", "插件列表", "全部插件"})
 enable_plugin = on_command(cmd="#启用", aliases={"#停用"}, permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN | PRIVATE_FRIEND)
-global_enable_plugin = on_command(cmd="#全局启用", aliases={"#全局停用"}, permission=SUPERUSER)
-add_meta_data = on_command(cmd="#添加插件元数据", permission=SUPERUSER)
-del_meta_data = on_command(cmd="#删除插件元数据", permission=SUPERUSER)
+global_enable_plugin = on_command(cmd="#全局启用", aliases={"#全局停用"}, permission=SUPERUSER)  # 未完成
+add_meta_data = on_command(cmd="#添加元数据", permission=SUPERUSER)
+del_meta_data = on_command(cmd="#删除元数据", permission=SUPERUSER)  # 未完成
 hidden_plugin = on_command(cmd="#隐藏插件", permission=SUPERUSER)
 install_plugin = on_command("#install", aliases={"#安装插件"}, permission=SUPERUSER)
 uninstall_plugin = on_command("#uninstall", aliases={"#卸载插件"}, permission=SUPERUSER)

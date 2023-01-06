@@ -25,10 +25,10 @@ import pickle
 
 check_update = on_command("检查更新", permission=SUPERUSER)
 set_auto_update = on_command("启用自动更新", aliases={"停用自动更新"}, permission=SUPERUSER)
-update = on_command("#update", aliases={"#更新", "轻雪更新"}, permission=SUPERUSER)
-restart = on_command("#reboot", aliases={"#重启", "轻雪重启"}, permission=SUPERUSER)
+update = on_command("#update", aliases={"#更新", "#轻雪更新"}, permission=SUPERUSER)
+restart = on_command("#reboot", aliases={"#重启", "#轻雪重启"}, permission=SUPERUSER)
 export_database = on_command("#export", aliases={"#导出数据"}, permission=SUPERUSER)
-liteyuki_bot_info = on_command("#state", aliases={"#状态", "轻雪状态"})
+liteyuki_bot_info = on_command("#state", aliases={"#状态", "#轻雪状态"})
 clear_cache = on_command("#清除缓存", permission=SUPERUSER)
 self_destroy = on_command("#轻雪自毁", permission=SUPERUSER)
 enable_group = on_command("#群聊启用", aliases={"#群聊停用"}, permission=SUPERUSER)
@@ -201,7 +201,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     icon_pos = info_canvas.get_parent_box("content.head.icon")
     info_canvas.content.head.nickname = Text(
         uv_size=(1, 1), box_size=(0.6, 0.25), parent_point=(icon_pos[2] + 0.05, 0.4), point=(0, 1),
-        text=(await bot.get_login_info())["nickname"], font=default_font, dp=1
+        text=(await bot.get_stranger_info(user_id=event.self_id, no_cache=True))["nickname"], font=default_font, dp=1
     )
     nickname_pos = info_canvas.get_parent_box("content.head.nickname")
     await run_sync(info_canvas.draw_line)("content.head", (nickname_pos[0], nickname_pos[3] + 0.05), (nickname_pos[2], nickname_pos[3] + 0.05), (255, 255, 255, 255), width=5)

@@ -48,12 +48,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
 @add_aliases.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], args: Message = CommandArg()):
-    file_pool = {}
-    for f in resource_pool.keys():
-        if os.path.exists(os.path.join(Path.data, "genshin", f)):
-            file_pool[f] = json.load(open(os.path.join(Path.data, "genshin", f), encoding="utf-8"))
-        else:
-            await user_card.finish("数据缺失，请先发送“原神资源更新”以更新基础资源库")
+    file_pool = await load_resource(add_aliases)
     args, kwargs = Command.formatToCommand(cmd=str(args))
     identify_name = args[0]
     if len(args) > 1:
@@ -95,12 +90,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], args
 
 @character_img.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
-    file_pool = {}
-    for f in resource_pool.keys():
-        if os.path.exists(os.path.join(Path.data, "genshin", f)):
-            file_pool[f] = json.load(open(os.path.join(Path.data, "genshin", f), encoding="utf-8"))
-        else:
-            await character_card.finish(data_lost, at_sender=True)
+    file_pool = await load_resource(character_img)
     args, kwargs = Command.formatToCommand(event.raw_message)
     character_name_input = args[0].strip().replace("立绘", "").replace("#", "")
     if character_name_input == "更新":

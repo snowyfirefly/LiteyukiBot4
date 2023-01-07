@@ -24,15 +24,15 @@
 ## 启动
 
 ### 首次启动配置
-- 1.1.Windows可以使用```run.cmd```来启动Bot<br>
-- 1.2.Linux可以使用```run.sh```来启动Bot<br>
-- 2.先安装poetry，再执行```poetry install```在```bot.py```所在目录下用```python bot.py```命令启动<br>
+- 1.1.Windows可以直接使用```run.cmd```来启动Bot<br>
+- 1.2.Linux可以直接使用```run.sh```来启动Bot<br>
+- 2.手动启动(以上方法无法正常启动时使用)：先用```pip install poetry```安装poetry，再执行```poetry install```以安装依赖项，之后用```poetry run python bot.py```命令启动<br>
 
-Bot第一次启动会在目录下生成```.env```和```pyproject.toml```，此时打开```.env```，按照提示修改以下项
+Bot第一次启动会在目录下生成```.env```和，此时打开```.env```，按照提示修改以下项
 ```dotenv
 SUPERUSERS=[114514,1919810]# 超级用户的QQ号，多个用逗号分隔
-NICKNAME=["小明", "轻雪"]# Bot的昵称，用双引号包裹，多个用逗号分隔
-COMMAND_START=[""]# 这是命令前缀符号，轻雪默认没有前缀，可以根据需求添加```/```、```#```
+NICKNAME=["李田所"]# Bot的昵称，用双引号包裹，多个用逗号分隔
+COMMAND_START=[""]# 这是命令前缀符号，轻雪默认没有前缀，不建议添加其他命令头，可能会导致部分插件无法正常响应
 PORT=11451# Bot端运行端口，必须和go-cqhttp端中配置的端口一致才可以连接
 ```
 - 其余配置项在不清楚情况下建议不要去修改，否则会影响Bot正常运行

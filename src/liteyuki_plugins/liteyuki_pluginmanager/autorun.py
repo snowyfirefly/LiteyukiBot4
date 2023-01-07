@@ -34,7 +34,7 @@ async def _(matcher: Matcher, bot: Bot, event: Union[GroupMessageEvent, PrivateM
     else:
         pass
 
-@driver.on_bot_connect()
+@driver.on_bot_connect
 async def detect_liteyuki_resource():
     """
     检测轻雪插件的资源，不存在就下载

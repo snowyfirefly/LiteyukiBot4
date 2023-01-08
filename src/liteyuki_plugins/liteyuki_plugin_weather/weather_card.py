@@ -177,9 +177,6 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
                 # 加时间
                 add_or_sub = "+" if "+" in hour.fxTime else "-"
                 time_text = hour.fxTime.split("T")[1].split(add_or_sub)[0]
-        hour_panel.point = Img(
-
-        )
     else:
         canvas.content.hourly_temp_part.text = Text(
             uv_size=(1, 1), box_size=(0.6, 0.5), parent_point=(0.5, 0.5), point=(0.5, 0.5), text=no_detailed_data, font=default_font

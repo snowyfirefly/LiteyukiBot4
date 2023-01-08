@@ -27,12 +27,16 @@ def average(_iterable: Iterable) -> float:
     return total / len(_iterable)
 
 
-def download_file(url, file, chunk_size=1024):
+def download_file(url, file, chunk_size=1024, detect=False):
     """
-    url: file url
-    file: 文件另存为路径
-    chunk_size: chunk size
+    :param url: 链接
+    :param file: 文件路径
+    :param chunk_size:
+    :param detect: 检测到本地有就不下载
+    :return:
     """
+    if os.path.exists(file) and detect:
+        return 0
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
         if not os.path.exists(os.path.dirname(file)):
@@ -168,7 +172,8 @@ class Command:
                 keywords[arg.split("=")[0]] = "=".join(arg.split("=")[1:])
             else:
                 args.append(arg)
-        return tuple(args), keywords
+        args = tuple(args)
+        return args, keywords
 
     @staticmethod
     def formatToString(*args, **keywords) -> str:

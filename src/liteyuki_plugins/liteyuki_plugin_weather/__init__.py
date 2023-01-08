@@ -1,15 +1,21 @@
-from nonebot.adapters.onebot.v11 import MessageEvent, Bot, Message
+from nonebot.adapters.onebot.v11 import MessageEvent, Bot, Message, MessageSegment
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
-from nonebot import on_command
+from nonebot import on_command, on_endswith, on_message
+from nonebot.typing import T_State
 from nonebot.utils import run_sync
 from .weather_api import *
+from ...liteyuki_api.canvas import Canvas
 from ...liteyuki_api.data import Data
 from ...liteyuki_api.utils import *
+from .utils import *
+from .text import *
+from .weather_card import *
 
 set_key = on_command("配置天气key", permission=SUPERUSER)
 bind_location = on_command("绑定天气城市")
+query_weather_now = on_message(rule=WEATHER_NOW)
 
 
 @set_key.handle()
@@ -37,8 +43,83 @@ async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
     args, kwargs = Command.formatToCommand(str(arg))
     # 输入内容
     args_2 = Command.formatToString(*args)
-    location_list = await run_sync(get_location)(args_2, **kwargs)
-    await bind_location.send(location_list[0].name)
+
+    city_lookup_result: CityLookup = (await run_sync(city_lookup)(args_2, **kwargs))
+    if city_lookup_result is None:
+        await bind_location.finish(text.location_found_failed, at_sender=True)
+    else:
+        location = city_lookup_result.location[0]
+        Data(Data.users, event.user_id).set_data("weather_location",
+                                                 {
+                                                     "lat": location.lat,
+                                                     "lon": location.lon,
+                                                     "lang": kwargs.get("lang", "zh-hans"),
+                                                     "unit": kwargs.get("unit", "m")}
+                                                 )
+        await bind_location.finish(f"天气查询城市已设置为:{format_location_show_name([location.country, location.adm1, location.adm2, location.name])}")
+
+
+@query_weather_now.handle()
+async def _(bot: Bot, event: MessageEvent, state: T_State):
+    args, kwargs = Command.formatToCommand(str(event.message))
+
+    input_location = " ".join(args)
+    for weather_lang_name in weather_lang_names:
+        input_location = input_location.replace(weather_lang_name, "")
+    input_location = input_location.strip()
+
+    stored_location = Data(Data.users, event.user_id).get_data("weather_location", None)
+    state["location"] = None
+    state["lang"] = kwargs.get("lang", "zh-hans" if stored_location is None else stored_location.get("lang", "zh-hans"))
+    state["unit"] = kwargs.get("unit", "m" if stored_location is None else stored_location.get("unit", "m"))
+
+    if input_location == "" and stored_location is None:
+        """既无输入也无储存，询问地点"""
+        del state["location"]
+        await query_weather_now.send(text.where_you_want_know, at_sender=True)
+    elif input_location != "":
+        """用户有输入搜索地点"""
+        searched_locations: CityLookup = (await run_sync(city_lookup)(input_location))
+        if searched_locations is None:
+            await query_weather_now.finish(text.location_found_failed, at_sender=True)
+        else:
+            location = searched_locations.location[0]
+            state["location"] = {"lat": location.lat, "lon": location.lon}
+    else:
+        state["location"] = stored_location
+
+
+@query_weather_now.got(key="location")
+async def _(bot: Bot, event: MessageEvent, state: T_State):
+    location_xy: dict = state["location"]
+    if isinstance(state["location"], Message):
+        input_location = str(state["location"])
+        for weather_lang_name in weather_lang_names:
+            input_location = input_location.replace(weather_lang_name, "")
+        city_lookup_result: CityLookup = await run_sync(city_lookup)(input_location)
+        if city_lookup_result is None:
+            await query_weather_now.finish(location_found_failed, at_sender=True)
+        else:
+            location = city_lookup_result.location[0]
+            location_xy = {"lat": location.lat, "lon": location.lon}
+    city_lookup_model = city_lookup("",
+                                    location="%s,%s" % (location_xy.get("lon"), location_xy.get("lat")),
+                                    lang=state["lang"]
+                                    )
+    if city_lookup_model is None:
+        await query_weather_now.finish(location_found_failed, at_sender=True)
+    args = ("%s,%s" % (location_xy.get("lon"), location_xy.get("lat")),state["lang"],state["unit"])
+    weather_now_model = weather_now(*args)
+    air_now_model = air_now(*args)
+    weather_hourly_model = weather_hourly(*args)
+    if state["unit"] == "i":
+        unit = "℉"
+    else:
+        unit = "℃"
+    canvas: Canvas = await run_sync(generate_weather_now)(city_lookup_model.location[0], weather_now_model, weather_hourly_model,air_now_model, unit, state["lang"])
+
+    await query_weather_now.finish(MessageSegment.image(file=f"file:///{await run_sync(canvas.export_cache)()}"))
+    await run_sync(canvas.delete)()
 
 
 __plugin_meta__ = PluginMetadata(

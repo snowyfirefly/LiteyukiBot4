@@ -2,6 +2,8 @@ import os
 import uuid
 import textwrap
 from typing import Tuple, Union, List
+
+import nonebot
 from PIL import Image, ImageFont, ImageDraw
 
 from .config import Path
@@ -230,7 +232,7 @@ class TextSegment:
 
 class Text(BasePanel):
     def __init__(self, uv_size, box_size, parent_point, point, text: Union[str, list], font=os.path.join(Path.res, Font.MiSans_Medium), color=(255, 255, 255, 255), vertical=False,
-                 line_feed=False, force_size=False, font_size=None, dp: int = 5):
+                 line_feed=False, force_size=False, fill=(0, 0, 0, 0), fillet=0, outline=(0, 0, 0, 0), outline_width=0, font_size=None, dp: int = 5, anchor: str = "la"):
         """
         :param uv_size:
         :param box_size:
@@ -243,7 +245,16 @@ class Text(BasePanel):
         :param line_feed: 是否换行
         :param force_size: 强制大小
         :param dp: 字体大小递减精度
+        :param anchor : https://www.zhihu.com/question/474216280
+        :param fill: 底部填充颜色
+        :param fillet: 填充圆角
+        :param outline: 填充矩形边框颜色
+        :param outline_width: 填充矩形边框宽度
         """
+        self.outline_width = outline_width
+        self.outline = outline
+        self.fill = fill
+        self.fillet = fillet
         self.font = font
         self.text = text
         self.color = color
@@ -252,6 +263,7 @@ class Text(BasePanel):
         self.line_feed = line_feed
         self.dp = dp
         self.font_size = font_size
+        self.anchor = anchor
         super(Text, self).__init__(uv_size, box_size, parent_point, point)
 
     def load(self, only_calculate=False):
@@ -296,7 +308,11 @@ class Text(BasePanel):
                 if text_segment.font is None:
                     text_segment.font = self.font
                 image_font = ImageFont.truetype(font=text_segment.font, size=font_size)
-                draw.text(start_point, text_segment.text, text_segment.color, font=image_font, anchor="la")
+                if self.fill[-1] > 0:
+                    draw.rounded_rectangle((start_point[0], start_point[1], start_point[0] + actual_size[0], start_point[1] + actual_size[1]), fill=self.fill, radius=self.fillet,
+                                           outline=self.outline,
+                                           width=self.outline_width)
+                draw.text(start_point, text_segment.text, text_segment.color, font=image_font, anchor=self.anchor)
                 text_width = image_font.getsize(text_segment.text)
                 start_point[0] += text_width[0]
 
@@ -392,9 +408,9 @@ class Color:
     RED = (255, 0, 0, 255)
     GREEN = (0, 255, 0, 255)
     BLUE = (0, 0, 255, 255)
-    YELLOW = (255, 255, 0, 0)
-    PURPLE = (255, 0, 255, 0)
-    CYAN = (0, 255, 255, 0)
+    YELLOW = (255, 255, 0, 255)
+    PURPLE = (255, 0, 255, 255)
+    CYAN = (0, 255, 255, 255)
     WHITE = (255, 255, 255, 255)
     BLACK = (0, 0, 0, 255)
 
@@ -460,12 +476,18 @@ class Graphical:
 class Utils:
 
     @staticmethod
-    def central_clip_by_ratio(img: Image.Image, size: Tuple):
+    def central_clip_by_ratio(img: Image.Image, size: Tuple, use_cache=True):
         """
+        :param use_cache: 是否使用缓存，剪切过一次后默认生成缓存
         :param img:
         :param size: 仅为比例，满填充裁剪
         :return:
         """
+        filename_without_end = ".".join(os.path.basename(img.fp.name).split(".")[0:-1]) + f"_{size[0]}x{size[1]}" + ".png"
+        cache_file_path = os.path.join(Path.cache, filename_without_end)
+        if os.path.exists(cache_file_path) and use_cache:
+            nonebot.logger.info("本次使用缓存加载图片，不裁剪")
+            return Image.open(os.path.join(Path.cache, filename_without_end))
         img_ratio = img.size[0] / img.size[1]
         limited_ratio = size[0] / size[1]
         if limited_ratio > img_ratio:
@@ -487,6 +509,8 @@ class Utils:
                 img.size[0] - (img.size[0] - actual_size[0]) // 2, img.size[1]
             )
         img = img.crop(box).resize(size)
+        if use_cache:
+            img.save(cache_file_path)
         return img
 
     @staticmethod
@@ -516,3 +540,7 @@ class Utils:
         alpha = alpha_cover.split()[-1]
         img.putalpha(alpha)
         return img
+
+    @staticmethod
+    def open_img(path) -> Image.Image:
+        return Image.open(path, "RGBA")

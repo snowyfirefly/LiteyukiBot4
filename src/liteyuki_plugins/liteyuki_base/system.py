@@ -312,6 +312,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     #     uv_size=(1, 1), box_size=(1, 0.025), parent_point=(0.5, 0.997), point=(0.5, 1), text=generate_signature, font=default_font, color=(80, 80, 80, 255)
     # )
     await liteyuki_bot_info.send(MessageSegment.image(file="file:///%s" % await run_sync(info_canvas.export_cache)()))
+    await run_sync(info_canvas.delete)()
 
 
 # 清除缓存

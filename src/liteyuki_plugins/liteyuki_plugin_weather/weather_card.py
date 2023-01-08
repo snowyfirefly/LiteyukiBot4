@@ -196,7 +196,7 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
             )
             # 连线
             if hour_i > 0:
-                canvas.draw_line("content.hourly_temp_part", p1=last_point, p2=(point_x, point_y), color=Color.WHITE, width=5)
+                canvas.draw_line("content.hourly_temp_part", p1=last_point, p2=(point_x, point_y), color=Color.WHITE, width=7)
             if hour_i % 2 == 1:
                 # 双数小时加时间天气状态
                 state_icon_path = os.path.join(Path.cache, f"weather/{hour.icon}")
@@ -226,6 +226,6 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
             uv_size=(1, 1), box_size=(0.6, 0.5), parent_point=(0.5, 0.5), point=(0.5, 0.5), text=no_detailed_data, font=default_font
         )
     canvas.signature = Text(
-        uv_size=(1, 1), box_size=(1, 0.018), parent_point=(0.5, 0.995), point=(0.5, 1), text=f" {generate_signature} ", font=default_font, dp=1, fill=(40, 40, 40, 80), fillet=base_fillet
+        uv_size=(1, 1), box_size=(1, 0.018), parent_point=(0.5, 0.995), point=(0.5, 1), text=f" {generate_signature} ", font=default_font, dp=1, fill=base_cover, fillet=base_fillet
     )
     return canvas

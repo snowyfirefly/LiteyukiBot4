@@ -5,6 +5,8 @@ from nonebot.plugin import PluginMetadata
 from nonebot import on_command, on_endswith, on_message
 from nonebot.typing import T_State
 from nonebot.utils import run_sync
+
+from .resource import resource_git
 from .weather_api import *
 from ...liteyuki_api.canvas import Canvas
 from ...liteyuki_api.data import Data
@@ -132,8 +134,6 @@ __plugin_meta__ = PluginMetadata(
           '•绑定天气城市<地名>\n\n',
     extra={
         "liteyuki_plugin": True,
-        "liteyuki_resource_git": {
-
-        }
+        "liteyuki_resource_git": resource_git
     }
 )

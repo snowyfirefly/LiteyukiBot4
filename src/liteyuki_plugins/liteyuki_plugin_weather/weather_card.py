@@ -43,7 +43,7 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
     country_province_name, location_name = format_location_show_name_2([location.country, location.adm1, location.adm2, location.name])
     # 国家 中国 重庆市
     canvas.content.now_part.cp_name = Text(
-        uv_size=(1, 1), box_size=(0.8, 0.085), parent_point=(0.04, 0.04), point=(0, 0),
+        uv_size=(1, 1), box_size=(0.8, 0.085), parent_point=(0.025, 0.04), point=(0, 0),
         text=country_province_name, font=default_font, color=(220, 220, 220, 255), anchor="lt"
     )
     # 地点名 沙坪坝
@@ -81,7 +81,7 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
         else:
             arc_color = Color.hex2dec("FFEB4537")
         canvas.content.now_part.aqi = Text(
-            uv_size=(1, 1), box_size=(0.5, 0.1), parent_point=(0.5, 0.88), point=(0.5, 0.5),
+            uv_size=(1, 1), box_size=(0.5, 0.1), parent_point=(0.5, 0.89), point=(0.5, 0.5),
             text=f" AQI {AQI} {air.now.category} ", font=default_font, fill=arc_color, fillet=8
         )
 
@@ -150,7 +150,7 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
             uv_size=(1, 1), box_size=(0.6, 0.5), parent_point=(0.5, 0.5), point=(0.5, 0.5), text=no_detailed_data, font=default_font
         )
         canvas.content.now_part.aqi = Text(
-            uv_size=(1, 1), box_size=(0.5, 0.1), parent_point=(0.5, 0.88), point=(0.5, 0.5),
+            uv_size=(1, 1), box_size=(0.5, 0.1), parent_point=(0.5, 0.89), point=(0.5, 0.5),
             text=f" No AQI data ", font=default_font, fill=Color.hex2dec("FF55AF7B"), fillet=8
         )
 

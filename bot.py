@@ -9,6 +9,7 @@ from src.liteyuki_api.config import init
 # 初始化轻雪
 from src.liteyuki_api.data import Data
 
+# 初始化轻雪
 init()
 # 初始化Nonebot
 nonebot.init()

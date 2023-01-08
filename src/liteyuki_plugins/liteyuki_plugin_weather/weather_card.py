@@ -165,6 +165,11 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
         max_temp = max(temp_list)
         hour_dx = 1 / len(temp_list)
         for hour_i, hour in enumerate(weather_hourly.hourly[0:13]):
+            line_height = [0.2, 0.9]
+            point_xy = (
+                hour_dx / 2 + hour_dx * hour_i,
+
+            )
             hour_panel = canvas.content.hourly_temp_part.__dict__["hour_%s" % hour_i] = Panel(
                 uv_size=(1, 1), box_size=(hour_dx, 1), parent_point=(hour_dx*hour_i, 0), point=(0, 0)
             )
@@ -172,6 +177,9 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
                 # 加时间
                 add_or_sub = "+" if "+" in hour.fxTime else "-"
                 time_text = hour.fxTime.split("T")[1].split(add_or_sub)[0]
+        hour_panel.point = Img(
+
+        )
     else:
         canvas.content.hourly_temp_part.text = Text(
             uv_size=(1, 1), box_size=(0.6, 0.5), parent_point=(0.5, 0.5), point=(0.5, 0.5), text=no_detailed_data, font=default_font

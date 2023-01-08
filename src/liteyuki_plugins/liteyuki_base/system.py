@@ -200,7 +200,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     )
     icon_pos = info_canvas.get_parent_box("content.head.icon")
     info_canvas.content.head.nickname = Text(
-        uv_size=(1, 1), box_size=(0.6, 0.25), parent_point=(icon_pos[2] + 0.05, 0.4), point=(0, 1),
+        uv_size=(1, 1), box_size=(0.6, 0.18), parent_point=(icon_pos[2] + 0.05, 0.23), point=(0, 0.5),
         text=(await bot.get_stranger_info(user_id=event.self_id, no_cache=True))["nickname"], font=default_font, dp=1
     )
     nickname_pos = info_canvas.get_parent_box("content.head.nickname")

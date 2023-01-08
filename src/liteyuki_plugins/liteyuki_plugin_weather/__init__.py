@@ -108,15 +108,17 @@ async def _(bot: Bot, event: MessageEvent, state: T_State):
                                     )
     if city_lookup_model is None:
         await query_weather_now.finish(location_found_failed, at_sender=True)
-    args = ("%s,%s" % (location_xy.get("lon"), location_xy.get("lat")),state["lang"],state["unit"])
+    args = ("%s,%s" % (location_xy.get("lon"), location_xy.get("lat")), state["lang"], state["unit"])
     weather_now_model = weather_now(*args)
     air_now_model = air_now(*args)
     weather_hourly_model = weather_hourly(*args)
+    weather_daily_model = weather_daily(*args)
     if state["unit"] == "i":
         unit = "℉"
     else:
         unit = "℃"
-    canvas: Canvas = await run_sync(generate_weather_now)(city_lookup_model.location[0], weather_now_model, weather_hourly_model,air_now_model, unit, state["lang"])
+    canvas: Canvas = await run_sync(generate_weather_now)(location=city_lookup_model.location[0], weather_now=weather_now_model,
+                                                          weather_hourly=weather_hourly_model, weather_daily=weather_daily_model,air=air_now_model, unit=unit, lang=state["lang"])
 
     await query_weather_now.finish(MessageSegment.image(file=f"file:///{await run_sync(canvas.export_cache)()}"))
     await run_sync(canvas.delete)()

@@ -2,6 +2,8 @@ from typing import List
 
 from pydantic import BaseModel
 
+high_lon_no_data = "Too high latitude"
+no_data = "No data"
 
 class Location(BaseModel):
     name: str
@@ -28,21 +30,21 @@ class CityLookup(BaseModel):
 
 # 实时天气
 class Now(BaseModel):
-    obsTime: str = str()
-    temp: str = str()
-    feelsLike: str = str()
-    icon: str = str()
-    text: str = str()
-    wind360: str = str()
-    windDir: str = str()
-    windScale: str = str()
-    windSpeed: str = str()
-    humidity: str = str()
-    precip: str = str()
-    pressure: str = str()
-    vis: str = str()
-    cloud: str = str()
-    dew: str = str()
+    obsTime: str
+    temp: str
+    feelsLike: str
+    icon: str
+    text: str
+    wind360: str
+    windDir: str
+    windScale: str
+    windSpeed: str
+    humidity: str
+    precip: str
+    pressure: str
+    vis: str
+    cloud: str = no_data
+    dew: str = no_data
 
 
 class WeatherNow(BaseModel):
@@ -55,10 +57,10 @@ class WeatherNow(BaseModel):
 # 逐天天气
 class Daily(BaseModel):
     fxDate: str
-    sunrise: str = str()
-    sunset: str = str()
-    moonrise: str = str()
-    moonset: str = str()
+    sunrise: str = high_lon_no_data
+    sunset: str = high_lon_no_data
+    moonrise: str = no_data
+    moonset: str = no_data
     moonPhase: str
     moonPhaseIcon: str
     tempMax: str
@@ -150,7 +152,7 @@ class AirNowNow(BaseModel):
     o3: str
 
 class AirNow(BaseModel):
-    code: str = ""
+    code: str
     updateTime: str
     fxLink: str
     now: AirNowNow

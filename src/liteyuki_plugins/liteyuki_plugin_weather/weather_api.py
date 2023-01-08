@@ -73,6 +73,13 @@ def weather_now(location: str, lang="zh-hans", unit="m") -> WeatherNow:
     if resp.json()["code"] == "200":
         return WeatherNow(**resp.json())
 
+def weather_daily(location: str, lang="zh-hans", unit="m") -> WeatherDaily:
+    key, key_type = Data(Data.globals, "qweather").get_many_data({"key": None, "key_type": None})
+    url = f"https://{'dev' if key_type == 'dev' else ''}api.qweather.com/v7/weather/7d?"
+    resp = simple_request_get(url, params={"location": location, "lang": lang, "unit": unit, "key": key})
+    if resp.json()["code"] == "200":
+        return WeatherDaily(**resp.json())
+
 def air_now(location: str, lang="zh-hans", unit="m") -> AirNow:
     key, key_type = Data(Data.globals, "qweather").get_many_data({"key": None, "key_type": None})
     url = f"https://{'dev' if key_type == 'dev' else ''}api.qweather.com/v7/air/now?"

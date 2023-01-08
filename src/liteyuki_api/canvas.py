@@ -81,10 +81,14 @@ class Canvas(BasePanel):
         self.base_img = base_img
         self.canvas = self
         super(Canvas, self).__init__()
+        self.draw_line_list = []
 
     def export(self, file, alpha=False):
         self.base_img = self.base_img.convert("RGBA")
         self.save_as((0, 0, 1, 1))
+        draw = ImageDraw.Draw(self.base_img)
+        for line in self.draw_line_list:
+            draw.line(*line)
         if not alpha:
             self.base_img = self.base_img.convert("RGB")
         self.base_img.save(file)
@@ -202,8 +206,7 @@ class Canvas(BasePanel):
         dy = ac_pos[3] - ac_pos[1]
         xy_box = int((ac_pos[0] + dx * p1[0]) * control.canvas.base_img.size[0]), int((ac_pos[1] + dy * p1[1]) * control.canvas.base_img.size[1]), int(
             (ac_pos[0] + dx * p2[0]) * control.canvas.base_img.size[0]), int((ac_pos[1] + dy * p2[1]) * control.canvas.base_img.size[1])
-        draw = ImageDraw.Draw(control.canvas.base_img)
-        draw.line(xy_box, color, width)
+        self.draw_line_list.append((xy_box, color, width))
 
 
 class Panel(BasePanel):
@@ -309,9 +312,8 @@ class Text(BasePanel):
                     text_segment.font = self.font
                 image_font = ImageFont.truetype(font=text_segment.font, size=font_size)
                 if self.fill[-1] > 0:
-                    draw.rounded_rectangle((start_point[0], start_point[1], start_point[0] + actual_size[0], start_point[1] + actual_size[1]), fill=self.fill, radius=self.fillet,
-                                           outline=self.outline,
-                                           width=self.outline_width)
+                    rectangle = Graphical.rectangle(size=actual_size, fillet=self.fillet, color=self.fill, outline_width=self.outline_width, outline_color=self.outline)
+                    self.canvas.base_img.paste(im=rectangle, box=(start_point[0], start_point[1], start_point[0] + actual_size[0], start_point[1] + actual_size[1]), mask=rectangle.split()[-1])
                 draw.text(start_point, text_segment.text, text_segment.color, font=image_font, anchor=self.anchor)
                 text_width = image_font.getsize(text_segment.text)
                 start_point[0] += text_width[0]

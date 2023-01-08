@@ -92,35 +92,35 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
             {
                 "icon": os.path.join(Path.res, "textures/genshin/FIGHT_PROP_CHARGE_EFFICIENCY.png"),
                 "name": {
-                    "zh-hans": f"风向 {weather_now.now.wind360}° {weather_now.now.windSpeed}km/h",
+                    "zh-hans": f"风矢 {weather_now.now.wind360}° {weather_now.now.windSpeed}km/h",
                     "en": f"Wind {weather_now.now.wind360}° {weather_now.now.windSpeed}km/h",
                 }
             },
             {
                 "icon": os.path.join(Path.res, "textures/genshin/FIGHT_PROP_WATER_ADD_HURT.png"),
                 "name": {
-                    "zh-hans": f"相对湿度 {weather_now.now.humidity}%",
+                    "zh-hans": f"湿度 {weather_now.now.humidity}%",
                     "en": f"Humidity {weather_now.now.humidity}%"
                 }
             },
             {
                 "icon": os.path.join(Path.res, "textures/genshin/FIGHT_PROP_HEAL_ADD.png"),
                 "name": {
-                    "zh-hans": f"体感温度 {weather_now.now.feelsLike}{unit}",
-                    "en": f"FeelTemp {weather_now.now.feelsLike}{unit}"
+                    "zh-hans": f"体感 {weather_now.now.feelsLike}{unit}",
+                    "en": f"Feel {weather_now.now.feelsLike}{unit}"
                 }
             },
             {
                 "icon": os.path.join(Path.res, "textures/genshin/FIGHT_PROP_HP.png"),
                 "name": {
-                    "zh-hans": f"小时降水量 {weather_now.now.precip}mm",
+                    "zh-hans": f"降水 {weather_now.now.precip}mm",
                     "en": f"Precip {weather_now.now.precip}mm"
                 }
             },
             {
                 "icon": os.path.join(Path.res, "textures/genshin/FIGHT_PROP_CRITICAL_HURT.png"),
                 "name": {
-                    "zh-hans": f"大气压强 {weather_now.now.pressure}hPa",
+                    "zh-hans": f"气压 {weather_now.now.pressure}hPa",
                     "en": f"Atm {weather_now.now.pressure}hPa"
                 }
             },

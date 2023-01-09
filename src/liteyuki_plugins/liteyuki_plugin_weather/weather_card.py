@@ -1,4 +1,5 @@
 import random
+import time
 
 from .model import *
 from ...liteyuki_api.canvas import *
@@ -40,30 +41,41 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
     canvas.content.now_part = Rectangle(
         uv_size=(1, 1), box_size=(1, part_now_height_scale), parent_point=(0.5, 0), point=(0.5, 0), color=base_cover, fillet=base_fillet
     )
+    # 时间戳
+    a_o_s = "+" if "+" in weather_now.now.obsTime else "-"
+    date_text = weather_now.now.obsTime.split("T")[0]
+    time_text = weather_now.now.obsTime.split("T")[1].split(a_o_s)[0]
+    day_text = get_day(time.localtime().tm_wday+1, lang)
+
+    canvas.content.now_part.datetime = Text(
+        uv_size=(1, 1), box_size=(0.8, 0.06), parent_point=(0.015, 0.024), point=(0, 0), dp=1,
+        text=f"{date_text} {day_text} {time_text}",
+        font=default_font, color=(220, 220, 220, 255), anchor="lt"
+    )
     country_province_name, location_name = format_location_show_name_2([location.country, location.adm1, location.adm2, location.name])
     # 国家 中国 重庆市
     canvas.content.now_part.cp_name = Text(
-        uv_size=(1, 1), box_size=(0.8, 0.085), parent_point=(0.025, 0.04), point=(0, 0),
+        uv_size=(1, 1), box_size=(0.8, 0.075), parent_point=(0.5, 0.16), point=(0.5, 0.5),
         text=country_province_name, font=default_font, color=(220, 220, 220, 255), anchor="lt"
     )
     # 地点名 沙坪坝
     canvas.content.now_part.loc_name = Text(
-        uv_size=(1, 1), box_size=(0.75, 0.15), parent_point=(0.5, 0.19), point=(0.5, 0),
+        uv_size=(1, 1), box_size=(0.75, 0.13), parent_point=(0.5, 0.24), point=(0.5, 0),
         text=location_name, font=default_font, anchor="lt"
     )
     state_icon_path = os.path.join(Path.cache, f"weather/{weather_now.now.icon}.png")
     download_file(f"https://a.hecdn.net/img/common/icon/202106d/{weather_now.now.icon}.png", state_icon_path, detect=True)
     # 状态区
     canvas.content.now_part.state_icon = Img(
-        uv_size=(1, 1), box_size=(0.5, 0.5), parent_point=(0.5, 0.58), point=(1, 0.5),
+        uv_size=(1, 1), box_size=(0.5, 0.4), parent_point=(0.48, 0.58), point=(1, 0.5),
         img=Image.open(state_icon_path)
     )
     canvas.content.now_part.temp = Text(
-        uv_size=(1, 1), box_size=(0.5, 0.15), parent_point=(0.5, 0.48), point=(0, 0.5),
+        uv_size=(1, 1), box_size=(0.5, 0.13), parent_point=(0.52, 0.49), point=(0, 0.5),
         text=f"{weather_now.now.temp}{unit}", font=default_font
     )
     canvas.content.now_part.state_text = Text(
-        uv_size=(1, 1), box_size=(0.5, 0.12), parent_point=(0.5, 0.68), point=(0, 0.5),
+        uv_size=(1, 1), box_size=(0.5, 0.12), parent_point=(0.52, 0.68), point=(0, 0.5),
         text=weather_now.now.text, font=default_font
     )
 
@@ -85,57 +97,57 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
             {
                 "icon": os.path.join(Path.res, "textures/genshin/FIGHT_PROP_WIND_ADD_HURT.png"),
                 "name": {
-                    "zh-hans": f"{weather_now.now.windDir} {weather_now.now.windScale}级",
-                    "en": f"{weather_now.now.windDir} Lv.{weather_now.now.windScale}"
+                    "zh-hans": f"{weather_now.now.windDir}  {weather_now.now.windScale}级",
+                    "en": f"{weather_now.now.windDir}  Lv.{weather_now.now.windScale}"
                 }
             },
             {
                 "icon": os.path.join(Path.res, "textures/genshin/FIGHT_PROP_CHARGE_EFFICIENCY.png"),
                 "name": {
-                    "zh-hans": f"风矢 {weather_now.now.wind360}° {weather_now.now.windSpeed}km/h",
-                    "en": f"Wind {weather_now.now.wind360}° {weather_now.now.windSpeed}km/h",
+                    "zh-hans": f"风矢  {weather_now.now.wind360}° {weather_now.now.windSpeed}km/h",
+                    "en": f"Wind  {weather_now.now.wind360}° {weather_now.now.windSpeed}km/h",
                 }
             },
             {
                 "icon": os.path.join(Path.res, "textures/genshin/FIGHT_PROP_WATER_ADD_HURT.png"),
                 "name": {
-                    "zh-hans": f"湿度 {weather_now.now.humidity}%",
-                    "en": f"Humidity {weather_now.now.humidity}%"
+                    "zh-hans": f"湿度  {weather_now.now.humidity}%",
+                    "en": f"Humidity  {weather_now.now.humidity}%"
                 }
             },
             {
                 "icon": os.path.join(Path.res, "textures/genshin/FIGHT_PROP_HEAL_ADD.png"),
                 "name": {
-                    "zh-hans": f"体感 {weather_now.now.feelsLike}{unit}",
-                    "en": f"Feel {weather_now.now.feelsLike}{unit}"
+                    "zh-hans": f"体感  {weather_now.now.feelsLike}{unit}",
+                    "en": f"Feel  {weather_now.now.feelsLike}{unit}"
                 }
             },
             {
                 "icon": os.path.join(Path.res, "textures/genshin/FIGHT_PROP_HP.png"),
                 "name": {
-                    "zh-hans": f"降水 {weather_now.now.precip}mm",
-                    "en": f"Precip {weather_now.now.precip}mm"
+                    "zh-hans": f"降水  {weather_now.now.precip}mm",
+                    "en": f"Precip  {weather_now.now.precip}mm"
                 }
             },
             {
                 "icon": os.path.join(Path.res, "textures/genshin/FIGHT_PROP_CRITICAL_HURT.png"),
                 "name": {
-                    "zh-hans": f"气压 {weather_now.now.pressure}hPa",
-                    "en": f"Atm {weather_now.now.pressure}hPa"
+                    "zh-hans": f"气压  {weather_now.now.pressure}hPa",
+                    "en": f"Atm  {weather_now.now.pressure}hPa"
                 }
             },
             {
                 "icon": os.path.join(Path.res, "textures/qweather/sunrise.png"),
                 "name": {
-                    "zh-hans": f"日出 {weather_daily.daily[0].sunrise if weather_daily is not None else no_data}",
-                    "en": f"Sunrise {weather_daily.daily[0].sunrise if weather_daily is not None else no_data}"
+                    "zh-hans": f"日出  {weather_daily.daily[0].sunrise if weather_daily is not None else no_data}",
+                    "en": f"Sunrise  {weather_daily.daily[0].sunrise if weather_daily is not None else no_data}"
                 }
             },
             {
                 "icon": os.path.join(Path.res, "textures/qweather/sunset.png"),
                 "name": {
-                    "zh-hans": f"日落 {weather_daily.daily[0].sunset if weather_daily is not None else no_data}",
-                    "en": f"Sunset {weather_daily.daily[0].sunset if weather_daily is not None else no_data}"
+                    "zh-hans": f"日落  {weather_daily.daily[0].sunset if weather_daily is not None else no_data}",
+                    "en": f"Sunset  {weather_daily.daily[0].sunset if weather_daily is not None else no_data}"
                 }
             },
         ]

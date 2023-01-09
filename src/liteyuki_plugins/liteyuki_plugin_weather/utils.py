@@ -6,6 +6,16 @@ from ...liteyuki_api.utils import Command
 
 weather_lang_names = ("天气", "weather", "天気", "날씨")
 
+
+def get_day(day, lang="zh-hans"):
+    lang_day = {
+        "zh-hans": {1: "周一", 2: "周二", 3: "周三", 4: "周四", 5: "周五", 6: "周六", 7: "周日"},
+        "en": {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thur", 5: "Fri", 6: "Sat", 7: "Sun"},
+        "ja": {1: "月曜日", 2: "火曜日", 3: "水曜日", 4: "木曜日", 5: "金曜日", 6: "土曜日", 7: "日曜日"}
+    }
+    return lang_day.get(lang,lang_day["en"]).get(day)
+
+
 def format_location_show_name(level_list: list) -> str:
     """
     格式化可读地名，例如：["中国", "北京市", "北京", "北京"] -> "中国 北京市 北京"

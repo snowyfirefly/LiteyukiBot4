@@ -35,6 +35,7 @@ __plugin_meta__ = PluginMetadata(
           '•「#检查更新」检查当前版本是否为最新\n\n'
           '•「#启用/停用自动更新」管理自动更新\n\n'
           '•「#清除缓存」清楚无关紧要的缓存文件\n\n'
+          '•「#api api_name **params」直接调用gocqAPI并获取返回结果\n\n'
           '•「#导出数据」仅私聊生效，导出liteyuki.db的数据库文件\n\n'
           '•「liteyuki.db」将此文件发送给Bot导入数据',
     extra={

@@ -32,6 +32,7 @@ liteyuki_bot_info = on_command("#state", aliases={"#状态", "#轻雪状态"})
 clear_cache = on_command("#清除缓存", permission=SUPERUSER)
 self_destroy = on_command("#轻雪自毁", permission=SUPERUSER)
 enable_group = on_command("#群聊启用", aliases={"#群聊停用"}, permission=SUPERUSER)
+call_api = on_command("#api", permission=SUPERUSER)
 
 data_importer = on_notice()
 
@@ -342,6 +343,16 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         if not os.path.exists(Path.cache):
             os.makedirs(Path.cache)
         await clear_cache.send(message="当前没有缓存")
+
+
+@call_api.handle()
+async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+    try:
+        args, kwargs = Command.formatToCommand(str(arg), exe=True)
+        result = await bot.call_api(args[0], **kwargs)
+        await call_api.send(str(result))
+    except BaseException as e:
+        await call_api.send(f"API调用时出错：{traceback.format_exception(e)}")
 
 
 # 你在尝试一种很新的玩法

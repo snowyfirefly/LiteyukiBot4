@@ -151,8 +151,9 @@ class Command:
         return new
 
     @staticmethod
-    def formatToCommand(cmd: str, sep: str = " ", kw=True) -> Tuple[Tuple, Dict]:
+    def formatToCommand(cmd: str, sep: str = " ", kw=True, exe=False) -> Tuple[Tuple, Dict]:
         """
+        :param exe: 执行为Python对象，失败则为字符串
         :param kw: 将有等号的词语分出
         :param sep: 分隔符,默认空格
         :param cmd: "arg1 arg2 para1=value1 para2=value2"
@@ -169,8 +170,19 @@ class Command:
         for arg in cmd_list:
             arg = arg.replace("%20", " ")
             if "=" in arg and kw:
-                keywords[arg.split("=")[0]] = "=".join(arg.split("=")[1:])
+                value = arg.split("=")[1]
+                if exe:
+                    try:
+                        value = eval(value)
+                    except:
+                        pass
+                keywords[arg.split("=")[0]] = value
             else:
+                if exe:
+                    try:
+                        arg = eval(arg)
+                    except:
+                        pass
                 args.append(arg)
         args = tuple(args)
         return args, keywords

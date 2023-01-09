@@ -534,8 +534,7 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
                 sets[1] = 2
                 artifact_set_words.append(sets)
         dy = 0.05
-        set_word = Img(uv_size=(1, 1), box_size=(1, 0.1428), parent_point=(0.5, y0 + artifact_distance * (artifact_i + 1)), point=(0.5, 0),
-                       img=Image.open(os.path.join(Path.res, "textures", "genshin", "artifact_bg.png")))
+        set_word = Panel(uv_size=(1, 1), box_size=(1, 0.1428), parent_point=(0.5, y0 + artifact_distance * (artifact_i + 1)), point=(0.5, 0))
         canvas.part_3.set_word = set_word
 
         for w_i, word in enumerate(artifact_set_words):

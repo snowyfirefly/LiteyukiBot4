@@ -8,6 +8,7 @@
         "src/data",
         "src/cache",
         "src/config",
+        "src/nonebot_plugins",
         "src/data/liteyuki/drawing"
     ],
     "init_env": {

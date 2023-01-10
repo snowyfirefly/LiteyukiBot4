@@ -313,11 +313,11 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
                 img=Image.open(state_icon_path_day)
             )
             day_panel.day_night_icon = Img(
-                uv_size=(1, 1), box_size=(10, icon_high_scale * daily_control_scale * 0.6), parent_point=(0.5, 0.54 * daily_control_scale), point=(0, 0.5),
+                uv_size=(1, 1), box_size=(10, icon_high_scale * daily_control_scale * 0.8), parent_point=(0.5, 0.56 * daily_control_scale), point=(0, 0.5),
                 img=Image.open(state_icon_path_night)
             )
             day_panel.day_moon_icon = Img(
-                uv_size=(1, 1), box_size=(10, icon_high_scale * daily_control_scale * 0.6), parent_point=(0.5, 0.54 * daily_control_scale), point=(1, 0.5),
+                uv_size=(1, 1), box_size=(10, icon_high_scale * daily_control_scale * 0.8), parent_point=(0.5, 0.56 * daily_control_scale), point=(1, 0.5),
                 img=Image.open(state_icon_path_moon)
             )
             # 最大最小天气度数
@@ -364,14 +364,7 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
             parent_point=(0.5, 0.5), point=(0.5, 0.5), img=Graphical.rectangle(size=ad_panel_size, fillet=base_fillet,
                                                                                img=ad_img)
         )
-        ad_panel.ad_img.description = Rectangle(
-            uv_size=(1, 1), box_size=(0.3, 0.15),
-            parent_point=(0, 0), point=(0, 0),
-            color=base_cover, fillet=base_fillet
-        )
-        ad_panel.ad_img.description.text = Text(
-            uv_size=(1, 1), box_size=(1, 0.7), parent_point=(0.5, 0.5), point=(0.5, 0.5), text=f"轻雪广告{ad_panel_size[0]}x{ad_panel_size[1]}", font=Font.MiSans_Normal, dp=1
-        )
+
     # 轻雪最后签名
     canvas.signature = Text(
         uv_size=(1, 1), box_size=(1, 0.018), parent_point=(0.5, 0.995), point=(0.5, 1), text=f" {generate_signature} ", font=default_font, dp=1, fill=base_cover, fillet=base_fillet

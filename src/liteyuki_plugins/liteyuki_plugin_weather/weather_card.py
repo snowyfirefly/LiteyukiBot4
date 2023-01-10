@@ -196,6 +196,9 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
         temp_list = [float(hour.temp) for hour in hourly_limited_list]
         min_temp: float = min(temp_list)
         max_temp: float = max(temp_list)
+        if min_temp == max_temp:
+            min_temp -= 1
+            max_temp += 1
         delta_temp = max_temp - min_temp
         hour_dx = 1 / len(temp_list)
         up_line = 0.6
@@ -258,6 +261,9 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
         temp_list_time_2 = temp_min_list + temp_max_list
         min_temp: float = min(temp_list_time_2)
         max_temp: float = max(temp_list_time_2)
+        if min_temp == max_temp:
+            min_temp -= 1
+            max_temp += 1
         delta_temp = max_temp - min_temp
         day_dx = 1 / len(temp_min_list)
         up_line = 0.51
@@ -353,21 +359,19 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
     if len(os.listdir(ad_path)) > 0:
         ad_img_path = os.path.join(ad_path, random.choice(os.listdir(ad_path)))
         ad_img = Image.open(ad_img_path)
-    else:
-        ad_img = Image.new(mode="RGBA", size=ad_panel_size, color=(0, 0, 0, 0))
-    ad_panel.ad_img = Img(
-        uv_size=(1, 1), box_size=(1, 1),
-        parent_point=(0.5, 0.5), point=(0.5, 0.5), img=Graphical.rectangle(size=ad_panel_size, fillet=base_fillet,
-                                                                           img=ad_img)
-    )
-    ad_panel.ad_img.description = Rectangle(
-        uv_size=(1, 1), box_size=(0.25, 0.15),
-        parent_point=(0, 0), point=(0, 0),
-        color=base_cover, fillet=base_fillet
-    )
-    ad_panel.ad_img.description.text = Text(
-        uv_size=(1, 1), box_size=(1, 0.7), parent_point=(0.5, 0.5), point=(0.5, 0.5), text=f"轻雪广告{ad_panel_size[0]}x{ad_panel_size[1]}", font=Font.MiSans_Normal, dp=1
-    )
+        ad_panel.ad_img = Img(
+            uv_size=(1, 1), box_size=(1, 1),
+            parent_point=(0.5, 0.5), point=(0.5, 0.5), img=Graphical.rectangle(size=ad_panel_size, fillet=base_fillet,
+                                                                               img=ad_img)
+        )
+        ad_panel.ad_img.description = Rectangle(
+            uv_size=(1, 1), box_size=(0.3, 0.15),
+            parent_point=(0, 0), point=(0, 0),
+            color=base_cover, fillet=base_fillet
+        )
+        ad_panel.ad_img.description.text = Text(
+            uv_size=(1, 1), box_size=(1, 0.7), parent_point=(0.5, 0.5), point=(0.5, 0.5), text=f"轻雪广告{ad_panel_size[0]}x{ad_panel_size[1]}", font=Font.MiSans_Normal, dp=1
+        )
     # 轻雪最后签名
     canvas.signature = Text(
         uv_size=(1, 1), box_size=(1, 0.018), parent_point=(0.5, 0.995), point=(0.5, 1), text=f" {generate_signature} ", font=default_font, dp=1, fill=base_cover, fillet=base_fillet

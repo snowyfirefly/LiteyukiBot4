@@ -55,19 +55,19 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
     country_province_name, location_name = format_location_show_name_2([location.country, location.adm1, location.adm2, location.name])
     # 国家 中国 重庆市
     canvas.content.now_part.cp_name = Text(
-        uv_size=(1, 1), box_size=(0.8, 0.075), parent_point=(0.5, 0.16), point=(0.5, 0.5),
+        uv_size=(1, 1), box_size=(0.8, 0.075), parent_point=(0.5, 0.17), point=(0.5, 0.5),
         text=country_province_name, font=default_font, color=(220, 220, 220, 255), anchor="lt"
     )
     # 地点名 沙坪坝
     canvas.content.now_part.loc_name = Text(
-        uv_size=(1, 1), box_size=(0.75, 0.13), parent_point=(0.5, 0.24), point=(0.5, 0),
+        uv_size=(1, 1), box_size=(0.75, 0.13), parent_point=(0.5, 0.26), point=(0.5, 0),
         text=location_name, font=default_font, anchor="lt"
     )
     state_icon_path = os.path.join(Path.cache, f"weather/{weather_now.now.icon}.png")
     download_file(f"https://a.hecdn.net/img/common/icon/202106d/{weather_now.now.icon}.png", state_icon_path, detect=True)
     # 状态区
     canvas.content.now_part.state_icon = Img(
-        uv_size=(1, 1), box_size=(0.5, 0.4), parent_point=(0.48, 0.58), point=(1, 0.5),
+        uv_size=(1, 1), box_size=(0.5, 0.4), parent_point=(0.5, 0.58), point=(1, 0.5),
         img=Image.open(state_icon_path)
     )
     canvas.content.now_part.temp = Text(

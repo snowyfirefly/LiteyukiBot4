@@ -9,7 +9,8 @@
         "src/cache",
         "src/config",
         "src/nonebot_plugins",
-        "src/data/liteyuki/drawing"
+        "src/data/liteyuki/drawing",
+        "src/data/liteyuki/ads"
     ],
     "init_env": {
         "NICKNAME": "[\"轻雪\"]",

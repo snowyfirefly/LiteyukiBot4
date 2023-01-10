@@ -117,12 +117,13 @@ class Canvas(BasePanel):
         """
         sub_obj = self
         self.save_as((0, 0, 1, 1), True)
-        try:
-            for i, seq in enumerate(path.split(".")):
-                sub_obj = sub_obj.__dict__[seq]
-            return sub_obj.actual_pos
-        except KeyError:
-            raise KeyError("检查一下是不是控件路径写错力")
+        control_path = ""
+        for i, seq in enumerate(path.split(".")):
+            if seq not in sub_obj.__dict__:
+                raise KeyError(f"在{control_path}中找不到控件：{seq}")
+            control_path += f".{seq}"
+            sub_obj = sub_obj.__dict__[seq]
+        return sub_obj.actual_pos
 
     def get_actual_pixel_size(self, path: str) -> Union[None, Tuple[int, int]]:
         """
@@ -133,14 +134,15 @@ class Canvas(BasePanel):
         """
         sub_obj = self
         self.save_as((0, 0, 1, 1), True)
-        try:
-            for i, seq in enumerate(path.split(".")):
-                sub_obj = sub_obj.__dict__[seq]
-            dx = int(sub_obj.canvas.base_img.size[0] * (sub_obj.actual_pos[2] - sub_obj.actual_pos[0]))
-            dy = int(sub_obj.canvas.base_img.size[1] * (sub_obj.actual_pos[3] - sub_obj.actual_pos[1]))
-            return dx, dy
-        except KeyError:
-            raise KeyError("检查一下是不是控件路径写错力")
+        control_path = ""
+        for i, seq in enumerate(path.split(".")):
+            if seq not in sub_obj.__dict__:
+                raise KeyError(f"在{control_path}中找不到控件：{seq}")
+            control_path += f".{seq}"
+            sub_obj = sub_obj.__dict__[seq]
+        dx = int(sub_obj.canvas.base_img.size[0] * (sub_obj.actual_pos[2] - sub_obj.actual_pos[0]))
+        dy = int(sub_obj.canvas.base_img.size[1] * (sub_obj.actual_pos[3] - sub_obj.actual_pos[1]))
+        return dx, dy
 
     def get_actual_pixel_box(self, path: str) -> Union[None, Tuple[int, int, int, int]]:
         """
@@ -151,16 +153,17 @@ class Canvas(BasePanel):
         """
         sub_obj = self
         self.save_as((0, 0, 1, 1), True)
-        try:
-            for i, seq in enumerate(path.split(".")):
-                sub_obj = sub_obj.__dict__[seq]
-            x1 = int(sub_obj.canvas.base_img.size[0] * sub_obj.actual_pos[0])
-            y1 = int(sub_obj.canvas.base_img.size[1] * sub_obj.actual_pos[1])
-            x2 = int(sub_obj.canvas.base_img.size[2] * sub_obj.actual_pos[2])
-            y2 = int(sub_obj.canvas.base_img.size[3] * sub_obj.actual_pos[3])
-            return x1, y1, x2, y2
-        except KeyError:
-            raise KeyError("检查一下是不是控件路径写错力")
+        control_path = ""
+        for i, seq in enumerate(path.split(".")):
+            if seq not in sub_obj.__dict__:
+                raise KeyError(f"在{control_path}中找不到控件：{seq}")
+            control_path += f".{seq}"
+            sub_obj = sub_obj.__dict__[seq]
+        x1 = int(sub_obj.canvas.base_img.size[0] * sub_obj.actual_pos[0])
+        y1 = int(sub_obj.canvas.base_img.size[1] * sub_obj.actual_pos[1])
+        x2 = int(sub_obj.canvas.base_img.size[2] * sub_obj.actual_pos[2])
+        y2 = int(sub_obj.canvas.base_img.size[3] * sub_obj.actual_pos[3])
+        return x1, y1, x2, y2
 
     def get_parent_box(self, path: str) -> Union[None, Tuple[float, float, float, float]]:
         """
@@ -182,12 +185,13 @@ class Canvas(BasePanel):
     def get_control_by_path(self, path: str) -> Union[BasePanel, "Img", "Rectangle", "Text"]:
         sub_obj = self
         self.save_as((0, 0, 1, 1), True)
-        try:
-            for i, seq in enumerate(path.split(".")):
-                sub_obj = sub_obj.__dict__[seq]
-            return sub_obj
-        except KeyError:
-            raise KeyError("检查一下是不是控件路径写错力")
+        control_path = ""
+        for i, seq in enumerate(path.split(".")):
+            if seq not in sub_obj.__dict__:
+                raise KeyError(f"在{control_path}中找不到控件：{seq}")
+            control_path += f".{seq}"
+            sub_obj = sub_obj.__dict__[seq]
+        return sub_obj
 
     def draw_line(self, path: str, p1: Tuple[float, float], p2: Tuple[float, float], color, width):
         """
@@ -321,35 +325,35 @@ class Text(BasePanel):
 
 class Img(BasePanel):
     def __init__(self, uv_size, box_size, parent_point, point, img: Image.Image, keep_ratio=True):
-        self.img = img
+        self.img_base_img = img
         self.keep_ratio = keep_ratio
         super(Img, self).__init__(uv_size, box_size, parent_point, point)
 
     def load(self, only_calculate=False):
         self.preprocess()
-        self.img = self.img.convert("RGBA")
+        self.img_base_img = self.img_base_img.convert("RGBA")
         limited_size = int((self.canvas_box[2] - self.canvas_box[0]) * self.canvas.base_img.size[0]), \
                        int((self.canvas_box[3] - self.canvas_box[1]) * self.canvas.base_img.size[1])
 
         if self.keep_ratio:
             """保持比例"""
-            actual_ratio = self.img.size[0] / self.img.size[1]
+            actual_ratio = self.img_base_img.size[0] / self.img_base_img.size[1]
             limited_ratio = limited_size[0] / limited_size[1]
             if actual_ratio >= limited_ratio:
                 # 图片过长
-                self.img = self.img.resize(
-                    (int(self.img.size[0] * limited_size[0] / self.img.size[0]),
-                     int(self.img.size[1] * limited_size[0] / self.img.size[0]))
+                self.img_base_img = self.img_base_img.resize(
+                    (int(self.img_base_img.size[0] * limited_size[0] / self.img_base_img.size[0]),
+                     int(self.img_base_img.size[1] * limited_size[0] / self.img_base_img.size[0]))
                 )
             else:
-                self.img = self.img.resize(
-                    (int(self.img.size[0] * limited_size[1] / self.img.size[1]),
-                     int(self.img.size[1] * limited_size[1] / self.img.size[1]))
+                self.img_base_img = self.img_base_img.resize(
+                    (int(self.img_base_img.size[0] * limited_size[1] / self.img_base_img.size[1]),
+                     int(self.img_base_img.size[1] * limited_size[1] / self.img_base_img.size[1]))
                 )
 
         else:
             """不保持比例"""
-            self.img = self.img.resize(limited_size)
+            self.img_base_img = self.img_base_img.resize(limited_size)
 
         # 占比长度
         if isinstance(self.parent, Img) or isinstance(self.parent, Text):
@@ -358,21 +362,21 @@ class Img(BasePanel):
         dx0 = self.parent.canvas_box[2] - self.parent.canvas_box[0]
         dy0 = self.parent.canvas_box[3] - self.parent.canvas_box[1]
 
-        dx1 = self.img.size[0] / self.canvas.base_img.size[0]
-        dy1 = self.img.size[1] / self.canvas.base_img.size[1]
+        dx1 = self.img_base_img.size[0] / self.canvas.base_img.size[0]
+        dy1 = self.img_base_img.size[1] / self.canvas.base_img.size[1]
         start_point = (
             int((self.parent.canvas_box[0] + dx0 * self.parent_point[0] - dx1 * self.point[0]) * self.canvas.base_img.size[0]),
             int((self.parent.canvas_box[1] + dy0 * self.parent_point[1] - dy1 * self.point[1]) * self.canvas.base_img.size[1])
         )
-        alpha = self.img.split()[3]
+        alpha = self.img_base_img.split()[3]
         self.actual_pos = (
             start_point[0] / self.canvas.base_img.size[0],
             start_point[1] / self.canvas.base_img.size[1],
-            (start_point[0] + self.img.size[0]) / self.canvas.base_img.size[0],
-            (start_point[1] + self.img.size[1]) / self.canvas.base_img.size[1],
+            (start_point[0] + self.img_base_img.size[0]) / self.canvas.base_img.size[0],
+            (start_point[1] + self.img_base_img.size[1]) / self.canvas.base_img.size[1],
         )
         if not only_calculate:
-            self.canvas.base_img.paste(self.img, start_point, alpha)
+            self.canvas.base_img.paste(self.img_base_img, start_point, alpha)
 
     def preprocess(self):
         pass
@@ -400,9 +404,9 @@ class Rectangle(Img):
     def preprocess(self):
         limited_size = (int(self.canvas.base_img.size[0] * (self.canvas_box[2] - self.canvas_box[0])),
                         int(self.canvas.base_img.size[1] * (self.canvas_box[3] - self.canvas_box[1])))
-        if not self.keep_ratio and self.img is not None and self.img.size[0] / self.img.size[1] != limited_size[0] / limited_size[1]:
-            self.img = self.img.resize(limited_size)
-        self.img = Graphical.rectangle(size=limited_size, fillet=self.fillet, color=self.color, outline_width=self.outline_width, outline_color=self.outline_color, img=self.img)
+        if not self.keep_ratio and self.img_base_img is not None and self.img_base_img.size[0] / self.img_base_img.size[1] != limited_size[0] / limited_size[1]:
+            self.img_base_img = self.img_base_img.resize(limited_size)
+        self.img_base_img = Graphical.rectangle(size=limited_size, fillet=self.fillet, color=self.color, outline_width=self.outline_width, outline_color=self.outline_color, img=self.img_base_img)
 
 
 class Color:
@@ -448,7 +452,7 @@ class Graphical:
     @staticmethod
     def rectangle(size, fillet: Union[int, float] = 0.0, color=default_color, outline_width=0, outline_color=default_color, img=None):
         """
-        :param img:
+        :param img: 传入则裁剪图片,且size将参数无效
         :param size:
         :param fillet: 圆角半径可以为0-1浮点或者整数,浮点时取宽高中最小值计算半径
         :param color:
@@ -456,16 +460,26 @@ class Graphical:
         :param outline_color:
         :return:
         """
-        base = img
-        if img is None:
-            base = Image.new(mode="RGBA", color=(0, 0, 0, 0), size=size)
-        draw = ImageDraw.Draw(base)
         if isinstance(fillet, float) and 0 <= fillet <= 0.5:
             r = min(size[0], size[1]) * fillet
         else:
             r = fillet
-        draw.rounded_rectangle(xy=(0, 0, size[0], size[1]), radius=r, fill=color, width=outline_width, outline=outline_color)
-        return base
+        base = img
+        if base is None:
+            base = Image.new(mode="RGBA", color=(0, 0, 0, 0), size=size)
+            draw = ImageDraw.Draw(base)
+
+            draw.rounded_rectangle(xy=(0, 0, size[0], size[1]), radius=r, fill=color, width=outline_width, outline=outline_color)
+            return base
+        else:
+            alpha_cover = Image.new(mode="RGBA", color=(0, 0, 0, 0), size=size)
+            draw = ImageDraw.Draw(alpha_cover)
+            draw.rounded_rectangle(xy=(0, 0, size[0], size[1]), radius=r, fill=color, width=outline_width, outline=outline_color)
+            base = Utils.central_clip_by_ratio(base, size, use_cache=False)
+            base.putalpha(alpha_cover.split()[-1])
+            return base
+
+
 
     @staticmethod
     def arc(radius: int, start, end, color=(255, 255, 255, 255), width=1) -> Image.Image:
@@ -485,11 +499,12 @@ class Utils:
         :param size: 仅为比例，满填充裁剪
         :return:
         """
-        filename_without_end = ".".join(os.path.basename(img.fp.name).split(".")[0:-1]) + f"_{size[0]}x{size[1]}" + ".png"
-        cache_file_path = os.path.join(Path.cache, filename_without_end)
-        if os.path.exists(cache_file_path) and use_cache:
-            nonebot.logger.info("本次使用缓存加载图片，不裁剪")
-            return Image.open(os.path.join(Path.cache, filename_without_end))
+        if use_cache:
+            filename_without_end = ".".join(os.path.basename(img.fp.name).split(".")[0:-1]) + f"_{size[0]}x{size[1]}" + ".png"
+            cache_file_path = os.path.join(Path.cache, filename_without_end)
+            if os.path.exists(cache_file_path):
+                nonebot.logger.info("本次使用缓存加载图片，不裁剪")
+                return Image.open(os.path.join(Path.cache, filename_without_end))
         img_ratio = img.size[0] / img.size[1]
         limited_ratio = size[0] / size[1]
         if limited_ratio > img_ratio:

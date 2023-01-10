@@ -1,5 +1,8 @@
+import os
 import random
 import time
+
+import nonebot
 
 from .model import *
 from ...liteyuki_api.canvas import *
@@ -24,10 +27,12 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
     distance_height_scale = distance_height / (bg_size[1] - 2 * side_width)
     part_now_height_scale = 0.27
     tag_part_height_scale = 0.13
-    hourly_temp_part_height_scale = 0.15
+    hourly_part_height_scale = 0.15
+    daily_part_height_scale = 0.25
+    ad_part_height_scale = 0.15
 
     if len(os.listdir(drawing_path)) > 0:
-        base_img = Utils.central_clip_by_ratio(Image.open(os.path.join(Path.data, "liteyuki/drawing/%s" % random.choice(os.listdir(drawing_path)))), bg_size)
+        base_img = Utils.central_clip_by_ratio(Image.open(os.path.join(Path.data, f"liteyuki/drawing/{random.choice(os.listdir(drawing_path))}")), bg_size)
     else:
         base_img = Image.new(mode="RGBA", size=bg_size, color=(255, 255, 255, 255))
     canvas = Canvas(base_img)
@@ -45,7 +50,7 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
     a_o_s = "+" if "+" in weather_now.now.obsTime else "-"
     date_text = weather_now.now.obsTime.split("T")[0]
     time_text = weather_now.now.obsTime.split("T")[1].split(a_o_s)[0]
-    day_text = get_day(time.localtime().tm_wday+1, lang)
+    day_text = get_day(time.localtime().tm_wday + 1, lang)
 
     canvas.content.now_part.datetime = Text(
         uv_size=(1, 1), box_size=(0.8, 0.06), parent_point=(0.015, 0.024), point=(0, 0), dp=1,
@@ -63,12 +68,12 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
         uv_size=(1, 1), box_size=(0.75, 0.13), parent_point=(0.5, 0.26), point=(0.5, 0),
         text=location_name, font=default_font, anchor="lt"
     )
-    state_icon_path = os.path.join(Path.cache, f"weather/{weather_now.now.icon}.png")
-    download_file(f"https://a.hecdn.net/img/common/icon/202106d/{weather_now.now.icon}.png", state_icon_path, detect=True)
+    state_icon_path_day = os.path.join(Path.cache, f"weather/{weather_now.now.icon}.png")
+    download_file(f"https://a.hecdn.net/img/common/icon/202106d/{weather_now.now.icon}.png", state_icon_path_day, detect=True)
     # 状态区
     canvas.content.now_part.state_icon = Img(
         uv_size=(1, 1), box_size=(0.5, 0.4), parent_point=(0.5, 0.58), point=(1, 0.5),
-        img=Image.open(state_icon_path)
+        img=Image.open(state_icon_path_day)
     )
     canvas.content.now_part.temp = Text(
         uv_size=(1, 1), box_size=(0.5, 0.13), parent_point=(0.52, 0.49), point=(0, 0.5),
@@ -157,7 +162,7 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
         for prop_i, prop in enumerate(props):
             row = prop_i // count_for_each_row
             columns = prop_i % count_for_each_row
-            prop_panel = canvas.content.tag_part.__dict__["prop_%s" % prop_i] = Panel(
+            prop_panel = canvas.content.tag_part.__dict__[f"prop_{prop_i}"] = Panel(
                 uv_size=(1, 1), box_size=(prop_dx, prop_dy), parent_point=(prop_dx * columns, prop_dy * row), point=(0, 0)
             )
             prop_panel.icon = Img(
@@ -178,12 +183,14 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
         text=AQI_text, font=default_font, fill=arc_color, fillet=8
     )
 
-    # 小时温度区域
-    canvas.content.hourly_temp_part = Rectangle(
-        uv_size=(1, 1), box_size=(1, hourly_temp_part_height_scale), parent_point=(0.5, part_now_height_scale + tag_part_height_scale + distance_height_scale * 2), point=(0.5, 0),
+    # 小时、日共同变量
+    white_dot_high_scale = 0.06
+    icon_high_scale = 0.18
+    # 每小时温度部分
+    canvas.content.hourly_part = Rectangle(
+        uv_size=(1, 1), box_size=(1, hourly_part_height_scale), parent_point=(0.5, part_now_height_scale + tag_part_height_scale + distance_height_scale * 2), point=(0.5, 0),
         color=base_cover, fillet=base_fillet
     )
-
     hourly_limited_list = weather_hourly.hourly[0:13]
     if weather_hourly is not None:
         temp_list = [float(hour.temp) for hour in hourly_limited_list]
@@ -197,22 +204,22 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
         for hour_i, hour in enumerate(hourly_limited_list):
             last_point = (point_x, point_y)
             point_x = (hour_dx * (hour_i + 0.5))
-            point_y = down_line - ((down_line-up_line) * (float(hour.temp) - min_temp)/delta_temp)
+            point_y = down_line - ((down_line - up_line) * (float(hour.temp) - min_temp) / delta_temp)
 
-            hour_panel = canvas.content.hourly_temp_part.__dict__["hour_%s" % hour_i] = Panel(
-                uv_size=(1, 1), box_size=(hour_dx, 1), parent_point=(hour_dx*hour_i, 0), point=(0, 0)
+            hour_panel = canvas.content.hourly_part.__dict__[f"hour_{hour_i}"] = Panel(
+                uv_size=(1, 1), box_size=(hour_dx, 1), parent_point=(hour_dx * hour_i, 0), point=(0, 0)
             )
             hour_panel.point = Img(
-                uv_size=(1, 1), box_size=(0.3, 0.1), parent_point=(0.5, point_y), point=(0.5, 0.5),
+                uv_size=(1, 1), box_size=(1, white_dot_high_scale), parent_point=(0.5, point_y), point=(0.5, 0.5),
                 img=Image.open(os.path.join(Path.res, "textures/qweather/white_dot.png"))
             )
             # 连线
             if hour_i > 0:
-                canvas.draw_line("content.hourly_temp_part", p1=last_point, p2=(point_x, point_y), color=Color.WHITE, width=7)
+                canvas.draw_line("content.hourly_part", p1=last_point, p2=(point_x, point_y), color=Color.WHITE, width=7)
             if hour_i % 2 == 1:
                 # 双数小时加时间天气状态
-                state_icon_path = os.path.join(Path.cache, f"weather/{hour.icon}")
-                download_file(f"https://a.hecdn.net/img/common/icon/202106d/{hour.icon}.png", state_icon_path, detect=True)
+                state_icon_path_day = os.path.join(Path.cache, f"weather/{hour.icon}")
+                download_file(f"https://a.hecdn.net/img/common/icon/202106d/{hour.icon}.png", state_icon_path_day, detect=True)
                 add_or_sub = "+" if "+" in hour.fxTime else "-"
                 time_text = hour.fxTime.split("T")[1].split(add_or_sub)[0]
                 hour_panel.time = Text(
@@ -220,23 +227,148 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
                     text=time_text, force_size=True, font=default_font
                 )
                 hour_panel.icon = Img(
-                    uv_size=(1, 1), box_size=(0.9, 0.6), parent_point=(0.5, 0.3), point=(0.5, 0.5),
-                    img=Image.open(state_icon_path)
+                    uv_size=(1, 1), box_size=(10, icon_high_scale), parent_point=(0.5, 0.3), point=(0.5, 0.5),
+                    img=Image.open(state_icon_path_day)
                 )
                 hour_panel.temp = Text(
                     uv_size=(1, 1), box_size=(0.5, 0.1), parent_point=(0.5, point_y - 0.08), point=(0.5, 1),
                     text=f"{hour.temp}", force_size=True, font=default_font
                 )
-                temp_pos = canvas.get_parent_box("content.hourly_temp_part.hour_%s.temp" % hour_i)
+                temp_pos = canvas.get_parent_box(f"content.hourly_part.hour_{hour_i}.temp")
                 hour_panel.character = Text(
                     uv_size=(1, 1), box_size=(0.5, 0.1), parent_point=(temp_pos[2], temp_pos[1]), point=(0, 0),
                     text="°", force_size=True, font=default_font
                 )
             last_point = (point_x, point_y)
     else:
-        canvas.content.hourly_temp_part.text = Text(
+        canvas.content.hourly_part.text = Text(
             uv_size=(1, 1), box_size=(0.6, 0.5), parent_point=(0.5, 0.5), point=(0.5, 0.5), text=no_detailed_data, font=default_font
         )
+
+    # 每天天气部分
+    daily_control_scale = hourly_part_height_scale / daily_part_height_scale
+    canvas.content.daily_part = Rectangle(
+        uv_size=(1, 1), box_size=(1, daily_part_height_scale),
+        parent_point=(0.5, part_now_height_scale + tag_part_height_scale + hourly_part_height_scale + distance_height_scale * 3), point=(0.5, 0),
+        color=base_cover, fillet=base_fillet
+    )
+    if weather_daily is not None:
+        temp_min_list = [float(day.tempMin) for day in weather_daily.daily]
+        temp_max_list = [float(day.tempMax) for day in weather_daily.daily]
+        temp_list_time_2 = temp_min_list + temp_max_list
+        min_temp: float = min(temp_list_time_2)
+        max_temp: float = max(temp_list_time_2)
+        delta_temp = max_temp - min_temp
+        day_dx = 1 / len(temp_min_list)
+        up_line = 0.51
+        down_line = 0.75
+        last_point_min, last_point_max = (0, 0), (0, 0)
+        today = time.localtime().tm_wday
+        for day_i, day in enumerate(weather_daily.daily):
+
+            point_max = day_dx * (day_i + 0.5), down_line - ((down_line - up_line) * (float(day.tempMax) - min_temp) / delta_temp)
+            point_min = day_dx * (day_i + 0.5), down_line - ((down_line - up_line) * (float(day.tempMin) - min_temp) / delta_temp)
+
+            day_panel = canvas.content.daily_part.__dict__[f"day_{day_i}"] = Panel(
+                uv_size=(1, 1), box_size=(day_dx, 1), parent_point=(day_dx * day_i, 0), point=(0, 0)
+            )
+            day_panel.point_min = Img(
+                uv_size=(1, 1), box_size=(1, white_dot_high_scale * daily_control_scale), parent_point=(0.5, point_min[1]), point=(0.5, 0.5),
+                img=Image.open(os.path.join(Path.res, "textures/qweather/white_dot.png"))
+            )
+            day_panel.point_max = Img(
+                uv_size=(1, 1), box_size=(1, white_dot_high_scale * daily_control_scale), parent_point=(0.5, point_max[1]), point=(0.5, 0.5),
+                img=Image.open(os.path.join(Path.res, "textures/qweather/white_dot.png"))
+            )
+            # 连线
+            if day_i > 0:
+                canvas.draw_line("content.daily_part", p1=last_point_min, p2=point_min, color=Color.WHITE, width=7)
+                canvas.draw_line("content.daily_part", p1=last_point_max, p2=point_max, color=Color.WHITE, width=7)
+
+            state_icon_path_day = os.path.join(Path.cache, f"weather/{day.iconDay}.png")
+            state_icon_path_night = os.path.join(Path.cache, f"weather/{day.iconNight}.png")
+            state_icon_path_moon = os.path.join(Path.cache, f"weather/{day.moonPhaseIcon}.png")
+            download_file(f"https://a.hecdn.net/img/common/icon/202106d/{day.iconDay}.png", state_icon_path_day, detect=True)
+            download_file(f"https://a.hecdn.net/img/common/icon/202106d/{day.iconNight}.png", state_icon_path_night, detect=True)
+            download_file(f"https://a.hecdn.net/img/common/icon/202106d/{day.moonPhaseIcon}.png", state_icon_path_moon, detect=True)
+            time_text = ".".join(day.fxDate.split("-")[1:])
+            # 时间和图标
+
+            day_panel.date = Text(
+                uv_size=(1, 1), box_size=(0.5, 0.1 * daily_control_scale), parent_point=(0.5, 0.12 * daily_control_scale), point=(0.5, 0.5),
+                text=time_text, force_size=True, font=default_font
+            )
+            day_panel.day = Text(
+                uv_size=(1, 1), box_size=(0.5, 0.09 * daily_control_scale), parent_point=(0.5, 0.24 * daily_control_scale), point=(0.5, 0.5),
+                text=get_day(today % 7 + 1, lang), force_size=True, font=default_font
+            )
+            day_panel.day_icon = Img(
+                uv_size=(1, 1), box_size=(10, icon_high_scale * daily_control_scale), parent_point=(0.5, 0.41 * daily_control_scale), point=(0.5, 0.5),
+                img=Image.open(state_icon_path_day)
+            )
+            day_panel.day_night_icon = Img(
+                uv_size=(1, 1), box_size=(10, icon_high_scale * daily_control_scale * 0.6), parent_point=(0.5, 0.54 * daily_control_scale), point=(0, 0.5),
+                img=Image.open(state_icon_path_night)
+            )
+            day_panel.day_moon_icon = Img(
+                uv_size=(1, 1), box_size=(10, icon_high_scale * daily_control_scale * 0.6), parent_point=(0.5, 0.54 * daily_control_scale), point=(1, 0.5),
+                img=Image.open(state_icon_path_moon)
+            )
+            # 最大最小天气度数
+            day_panel.temp_min = Text(
+                uv_size=(1, 1), box_size=(0.5, 0.1 * daily_control_scale), parent_point=(0.5, point_min[1] + 0.08 * daily_control_scale), point=(0.5, 0),
+                text=f"{day.tempMin}", force_size=True, font=default_font
+            )
+            day_panel.temp_max = Text(
+                uv_size=(1, 1), box_size=(0.5, 0.1 * daily_control_scale), parent_point=(0.5, point_max[1] - 0.08 * daily_control_scale), point=(0.5, 1),
+                text=f"{day.tempMax}", force_size=True, font=default_font
+            )
+            temp_pos_min = canvas.get_parent_box(f"content.daily_part.day_{day_i}.temp_min")
+            temp_pos_max = canvas.get_parent_box(f"content.daily_part.day_{day_i}.temp_max")
+            # 度数符号
+            day_panel.character_min = Text(
+                uv_size=(1, 1), box_size=(0.5, 0.1 * daily_control_scale), parent_point=(temp_pos_min[2], temp_pos_min[1]), point=(0, 0),
+                text="°", force_size=True, font=default_font
+            )
+            day_panel.character_max = Text(
+                uv_size=(1, 1), box_size=(0.5, 0.1 * daily_control_scale), parent_point=(temp_pos_max[2], temp_pos_max[1]), point=(0, 0),
+                text="°", force_size=True, font=default_font
+            )
+            last_point_min = point_min
+            last_point_max = point_max
+            today += 1
+    else:
+        canvas.content.daily_part.text = Text(
+            uv_size=(1, 1), box_size=(0.6, 0.5 * daily_control_scale), parent_point=(0.5, 0.5), point=(0.5, 0.5), text=no_detailed_data, font=default_font
+        )
+
+    ad_panel = canvas.content.ad_part = Rectangle(
+        uv_size=(1, 1), box_size=(1, ad_part_height_scale),
+        parent_point=(0.5, part_now_height_scale + tag_part_height_scale + hourly_part_height_scale + daily_part_height_scale + distance_height_scale * 4), point=(0.5, 0),
+        color=base_cover, fillet=base_fillet
+    )
+    ad_panel_size = canvas.get_actual_pixel_size("content.ad_part")
+    ad_path = os.path.join(Path.data, "liteyuki/ads")
+
+    if len(os.listdir(ad_path)) > 0:
+        ad_img_path = os.path.join(ad_path, random.choice(os.listdir(ad_path)))
+        ad_img = Image.open(ad_img_path)
+    else:
+        ad_img = Image.new(mode="RGBA", size=ad_panel_size, color=(0, 0, 0, 0))
+    ad_panel.ad_img = Img(
+        uv_size=(1, 1), box_size=(1, 1),
+        parent_point=(0.5, 0.5), point=(0.5, 0.5), img=Graphical.rectangle(size=ad_panel_size, fillet=base_fillet,
+                                                                           img=ad_img)
+    )
+    ad_panel.ad_img.description = Rectangle(
+        uv_size=(1, 1), box_size=(0.25, 0.15),
+        parent_point=(0, 0), point=(0, 0),
+        color=base_cover, fillet=base_fillet
+    )
+    ad_panel.ad_img.description.text = Text(
+        uv_size=(1, 1), box_size=(1, 0.7), parent_point=(0.5, 0.5), point=(0.5, 0.5), text=f"轻雪广告{ad_panel_size[0]}x{ad_panel_size[1]}", font=Font.MiSans_Normal, dp=1
+    )
+    # 轻雪最后签名
     canvas.signature = Text(
         uv_size=(1, 1), box_size=(1, 0.018), parent_point=(0.5, 0.995), point=(0.5, 1), text=f" {generate_signature} ", font=default_font, dp=1, fill=base_cover, fillet=base_fillet
     )

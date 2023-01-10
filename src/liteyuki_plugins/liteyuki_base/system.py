@@ -108,6 +108,11 @@ async def _(bot: Bot, event: NoticeEvent, state: T_State):
                         for key, value in document.items():
                             collection.update_one(filter={"_id": document.get("_id")}, update={"$set": {key: value}}, upsert=True)
                 await bot.send_private_msg(user_id=eventData.get("user_id"), message="数据库合并完成")
+            else:
+                url = file.get("url", "")
+                path = os.path.join(Path.data, "file_receive", name)
+                await run_sync(download_file)(url, path)
+                await bot.send_private_msg(user_id=eventData.get("user_id"), message=f"文件已存为{path}")
 
 
 # 轻雪状态

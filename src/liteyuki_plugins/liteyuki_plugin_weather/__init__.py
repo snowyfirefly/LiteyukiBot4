@@ -36,7 +36,7 @@ async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
             key_type = None
             await set_key.finish("key无效")
     Data(Data.globals, "qweather").set_many_data({"key": key, "key_type": key_type})
-    await set_key.send("和风天气key设置成功：%s" % ("商业版" if key_type == "com" else "开发版"))
+    await set_key.send(f"和风天气key设置成功：{'商业版' if key_type == 'com' else '开发版'}")
 
 
 @bind_location.handle()
@@ -105,12 +105,12 @@ async def _(bot: Bot, event: MessageEvent, state: T_State):
             location = city_lookup_result.location[0]
             location_xy = {"lat": location.lat, "lon": location.lon}
     city_lookup_model = city_lookup("",
-                                    location="%s,%s" % (location_xy.get("lon"), location_xy.get("lat")),
+                                    location=f"{location_xy.get('lon')},{location_xy.get('lat')}",
                                     lang=state["lang"]
                                     )
     if city_lookup_model is None:
         await query_weather_now.finish(location_found_failed, at_sender=True)
-    args = ("%s,%s" % (location_xy.get("lon"), location_xy.get("lat")), state["lang"], state["unit"])
+    args = (f"{location_xy.get('lon')},{location_xy.get('lat')}", state["lang"], state["unit"])
     weather_now_model = weather_now(*args)
     air_now_model = air_now(*args)
     weather_hourly_model = weather_hourly(*args)
@@ -120,7 +120,7 @@ async def _(bot: Bot, event: MessageEvent, state: T_State):
     else:
         unit = "℃"
     canvas: Canvas = await run_sync(generate_weather_now)(location=city_lookup_model.location[0], weather_now=weather_now_model,
-                                                          weather_hourly=weather_hourly_model, weather_daily=weather_daily_model,air=air_now_model, unit=unit, lang=state["lang"])
+                                                          weather_hourly=weather_hourly_model, weather_daily=weather_daily_model, air=air_now_model, unit=unit, lang=state["lang"])
 
     await query_weather_now.finish(MessageSegment.image(file=f"file:///{await run_sync(canvas.export_cache)()}"))
     await run_sync(canvas.delete)()

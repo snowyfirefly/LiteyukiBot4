@@ -73,9 +73,17 @@ def weather_now(location: str, lang="zh-hans", unit="m") -> WeatherNow:
     if resp.json()["code"] == "200":
         return WeatherNow(**resp.json())
 
-def weather_daily(location: str, lang="zh-hans", unit="m") -> WeatherDaily:
+def weather_daily(location: str, lang="zh-hans", unit="m", day=7) -> WeatherDaily:
+    """
+
+    :param day: (开发版仅支持3，7)3，7，10，15，30
+    :param location: 坐标|城市id
+    :param lang: 语言
+    :param unit: 温度单位：i|m
+    :return: 逐日天气
+    """
     key, key_type = Data(Data.globals, "qweather").get_many_data({"key": None, "key_type": None})
-    url = f"https://{'dev' if key_type == 'dev' else ''}api.qweather.com/v7/weather/7d?"
+    url = f"https://{'dev' if key_type == 'dev' else ''}api.qweather.com/v7/weather/{day}d?"
     resp = simple_request_get(url, params={"location": location, "lang": lang, "unit": unit, "key": key})
     if resp.json()["code"] == "200":
         return WeatherDaily(**resp.json())
@@ -87,9 +95,16 @@ def air_now(location: str, lang="zh-hans", unit="m") -> AirNow:
     if resp.json()["code"] == "200":
         return AirNow(**resp.json())
 
-def weather_hourly(location: str, lang="zh-hans", unit="m") -> WeatherHourly:
+def weather_hourly(location: str, lang="zh-hans", unit="m", hour=24) -> WeatherHourly:
+    """
+    :param location: 坐标|城市id
+    :param lang: 语言
+    :param unit: 温度单位：i|m
+    :param hour: 小时数： (开发版仅支持24)24，72，168
+    :return:
+    """
     key, key_type = Data(Data.globals, "qweather").get_many_data({"key": None, "key_type": None})
-    url = f"https://{'dev' if key_type == 'dev' else ''}api.qweather.com/v7/weather/24h?"
+    url = f"https://{'dev' if key_type == 'dev' else ''}api.qweather.com/v7/weather/{hour}h?"
     resp = simple_request_get(url, params={"location": location, "lang": lang, "unit": unit, "key": key})
     if resp.json()["code"] == "200":
         return WeatherHourly(**resp.json())

@@ -46,12 +46,16 @@ def format_location_show_name_2(level_list: list) -> Tuple[str, str]:
 
 @Rule
 async def WEATHER_NOW(bot, event, state):
+    """
+    当且仅当参数字符以 天气（及其他语言）结尾时可触发，逐天天气，逐小时天气不会触发
+    :param bot:
+    :param event:
+    :param state:
+    :return:
+    """
     args, kwargs = Command.formatToCommand(str(event.message))
     args = " ".join(args)
     if args.endswith(("逐天天气", "小时天气")):
         return False
     else:
-        if args.endswith(weather_lang_names):
-            return True
-        else:
-            return False
+        return args.endswith(weather_lang_names)

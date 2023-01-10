@@ -229,7 +229,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
             "sub_prop": [
                 "物理核心 %s" % psutil.cpu_count(logical=False),
                 "逻辑处理器 %s" % psutil.cpu_count(),
-                "%.1fMHz" % average(psutil.cpu_freq())
+                "%.1fMHz" % average([percpu.current for percpu in psutil.cpu_freq(percpu=True)])
             ]
         },
         {

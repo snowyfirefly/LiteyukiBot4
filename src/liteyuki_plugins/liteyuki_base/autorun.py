@@ -22,6 +22,11 @@ async def _():
     if Data(Data.globals, "liteyuki").get_data("liteyuki_id") is None:
         Data(Data.globals, "liteyuki").set_data("liteyuki_id", str(uuid.uuid4()))
 
+@driver.on_bot_connect
+async def _():
+    for bot_id in get_bots().items():
+        print(bot_id)
+
 
 @run_preprocessor
 async def _(matcher: Matcher, event: Union[GroupMessageEvent]):

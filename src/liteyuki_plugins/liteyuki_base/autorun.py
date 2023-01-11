@@ -22,10 +22,11 @@ async def _():
     if Data(Data.globals, "liteyuki").get_data("liteyuki_id") is None:
         Data(Data.globals, "liteyuki").set_data("liteyuki_id", str(uuid.uuid4()))
 
+
 @driver.on_bot_connect
-async def _():
-    for bot_id in get_bots().items():
-        print(bot_id)
+async def _(bot: Bot):
+    for superuser_id in bot.config.superusers:
+        await bot.send_private_msg(user_id=int(superuser_id), message=f"LiteyukiBot:{bot.self_id}已连接")
 
 
 @run_preprocessor

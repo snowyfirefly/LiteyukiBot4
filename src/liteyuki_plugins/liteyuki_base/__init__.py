@@ -15,7 +15,7 @@ async def _(args: Message = CommandArg()):
 
 @liteyuki.handle()
 async def _(bot: Bot):
-    await liteyuki.finish("轻雪测试成功：%s" % bot.self_id)
+    await liteyuki.finish(f"轻雪测试成功：{bot.self_id}\n轻雪服务端id：{Data(Data.globals, 'liteyuki').get_data('liteyuki_id', '暂无')}")
 
 
 @download_resource.handle()

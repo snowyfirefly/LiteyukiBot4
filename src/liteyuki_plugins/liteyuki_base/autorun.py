@@ -1,4 +1,5 @@
 import time
+import uuid
 
 from nonebot.adapters.onebot.v11 import MessageEvent
 from nonebot.adapters.onebot.v11.bot import Bot
@@ -18,6 +19,8 @@ driver = get_driver()
 @driver.on_startup
 async def _():
     Data(Data.globals, "liteyuki").set_data("start_time", list(time.localtime())[0:6])
+    if Data(Data.globals, "liteyuki").get_data("liteyuki_id") is None:
+        Data(Data.globals, "liteyuki").set_data("liteyuki_id", str(uuid.uuid4()))
 
 
 @run_preprocessor

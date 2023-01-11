@@ -7,7 +7,7 @@ import time
 
 import psutil
 from nonebot import *
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent, Message, NoticeEvent, Bot, MessageSegment
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent, Message, NoticeEvent, Bot, MessageSegment, MessageEvent
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 from nonebot.utils import run_sync
@@ -27,6 +27,7 @@ liteyuki_bot_info = on_command("#state", aliases={"#状态", "#轻雪状态"})
 clear_cache = on_command("#清除缓存", permission=SUPERUSER)
 self_destroy = on_command("#轻雪自毁", permission=SUPERUSER)
 enable_group = on_command("#群聊启用", aliases={"#群聊停用"}, permission=SUPERUSER)
+ban_user = on_command("#屏蔽用户", aliases={"#取消屏蔽"}, permission=SUPERUSER)
 call_api = on_command("#api", permission=SUPERUSER)
 
 data_importer = on_notice()
@@ -79,39 +80,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         f.close()
 
     await run_sync(export)()
-    _datetime = "-".join(list(time.localtime())[0:6])
+    _datetime = "-".join([str(i) for i in list(time.localtime())[0:6]])
     await bot.call_api("upload_private_file", user_id=event.user_id, file=f_path, name=f"liteyuki_{_datetime}.db")
-
-
-@data_importer.handle()
-async def _(bot: Bot, event: NoticeEvent):
-    eventData = event.dict()
-    if str(eventData.get("user_id", None)) in bot.config.superusers:
-        # 超级用户判断
-        if event.notice_type == "offline_file":
-            # 判断为文件
-            file = eventData["file"]
-            name: str = file.get("name", "")
-            if name.startswith("liteyuki") and name.endswith(".db"):
-                # 导数据
-                url = file.get("url", "")
-                path = os.path.join(Path.cache, name)
-                await run_sync(download_file)(url, path)
-                liteyuki_db = pickle.load(open(path, "rb"))
-                for collection_name, collection_data in liteyuki_db.items():
-                    collection = LiteyukiDB[collection_name]
-                    if collection_name == "export_time":
-                        continue
-                    for document in collection_data:
-                        for key, value in document.items():
-                            collection.update_one(filter={"_id": document.get("_id")}, update={"$set": {key: value}}, upsert=True)
-                await bot.send_private_msg(user_id=eventData.get("user_id"), message="数据库合并完成")
-            else:
-                # 存文件
-                url = file.get("url", "")
-                path = os.path.join(Path.data, "file_receive", name)
-                await run_sync(download_file)(url, path)
-                await bot.send_private_msg(user_id=eventData.get("user_id"), message=f"文件已存为{path}")
 
 
 # 轻雪状态
@@ -130,8 +100,9 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         4: "企点",
         5: "iPad"
     }
+    time_list_6 = [str(i) for i in list(Data(Data.globals, "liteyuki").get_data("start_time", tuple(time.localtime())[0:6]))]
     protocol_name = protocol_dict.get(version_info.get("protocol", version_info.get("protocol_name", 0)), "")
-    delta_time = datetime.datetime.now() - datetime.datetime.strptime("-".join(tuple(Data(Data.globals, "liteyuki").get_data("start_time", tuple(time.localtime())[0:6]))),
+    delta_time = datetime.datetime.now() - datetime.datetime.strptime("-".join(time_list_6),
                                                                       "%Y-%m-%d-%H-%M-%S")
     delta_sec = delta_time.days * 24 * 60 * 60 + delta_time.seconds
     prop_list = [
@@ -318,7 +289,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
 # 清除缓存
 @clear_cache.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+async def _():
     file_list = []
 
     def get_all_file(_dir: str):
@@ -346,13 +317,95 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
 
 @call_api.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+async def _(bot: Bot, arg: Message = CommandArg()):
     try:
         args, kwargs = Command.formatToCommand(str(arg), exe=True)
         result = await bot.call_api(args[0], **kwargs)
         await call_api.send(str(result))
     except BaseException as e:
         await call_api.send(f"API调用时出错：{traceback.format_exception(e)}")
+
+
+@ban_user.handle()
+async def _(event: MessageEvent, bot: Bot, arg: Message = CommandArg()):
+    user_id_list = [int(i) for i in str(arg).strip().split()]
+    banned_user_list = Data(Data.globals, "liteyuki").get_data("banned_users", [])
+    failed_list = []
+    suc_list = []
+    if "#屏蔽用户" in event.raw_message:
+        ban = True
+    else:
+        ban = False
+    info_dict = {}
+    for ban_user_id in user_id_list:
+        user_info = await bot.get_stranger_info(user_id=ban_user_id, no_cache=True)
+        nickname = user_info["nickname"]
+        info_dict[ban_user_id] = nickname
+        if ban:
+            if ban_user_id not in banned_user_list:
+                banned_user_list.append(ban_user_id)
+                suc_list.append(ban_user_id)
+            else:
+                failed_list.append(ban_user_id)
+        else:
+            if ban_user_id in banned_user_list:
+                banned_user_list.remove(ban_user_id)
+                suc_list.append(ban_user_id)
+            else:
+                failed_list.append(ban_user_id)
+
+    msg = ""
+    if len(suc_list) > 0:
+        if ban:
+            msg += "已屏蔽以下用户："
+        else:
+            msg += "已对以下用户取消屏蔽："
+        for suc_id in suc_list:
+            msg += f"\n- {info_dict[suc_id]}({suc_id})"
+
+    if len(failed_list) > 0:
+        if len(suc_list) > 0:
+            msg += "\n\n"
+        if ban:
+            msg += "以下用户之前已被屏蔽："
+        else:
+            msg += "以下用户之前未被屏蔽："
+        for failed_id in failed_list:
+            msg += f"\n- {info_dict[failed_id]}({failed_id})"
+    if len(user_id_list) > 0:
+        Data(Data.globals, "liteyuki").set_data("banned_users", banned_user_list)
+        await ban_user.send(msg)
+
+
+@data_importer.handle()
+async def _(bot: Bot, event: NoticeEvent):
+    eventData = event.dict()
+    if str(eventData.get("user_id", None)) in bot.config.superusers:
+        # 超级用户判断
+        if event.notice_type == "offline_file":
+            # 判断为文件
+            file = eventData["file"]
+            name: str = file.get("name", "")
+            if name.startswith("liteyuki") and name.endswith(".db"):
+                # 导数据
+                url = file.get("url", "")
+                path = os.path.join(Path.cache, name)
+                await run_sync(download_file)(url, path)
+                liteyuki_db = pickle.load(open(path, "rb"))
+                for collection_name, collection_data in liteyuki_db.items():
+                    collection = LiteyukiDB[collection_name]
+                    if collection_name == "export_time":
+                        continue
+                    for document in collection_data:
+                        for key, value in document.items():
+                            collection.update_one(filter={"_id": document.get("_id")}, update={"$set": {key: value}}, upsert=True)
+                await bot.send_private_msg(user_id=eventData.get("user_id"), message="数据库合并完成")
+            else:
+                # 存文件
+                url = file.get("url", "")
+                path = os.path.join(Path.data, "file_receive", name)
+                await run_sync(download_file)(url, path)
+                await bot.send_private_msg(user_id=eventData.get("user_id"), message=f"文件已存为{path}")
 
 
 # 你在尝试一种很新的玩法

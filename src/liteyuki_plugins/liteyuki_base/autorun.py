@@ -1,5 +1,6 @@
 import time
 
+from nonebot.adapters.onebot.v11 import MessageEvent
 from nonebot.adapters.onebot.v11.bot import Bot
 from nonebot.exception import IgnoredException
 from nonebot.internal.matcher import Matcher
@@ -20,7 +21,7 @@ async def _():
 
 
 @run_preprocessor
-async def _(matcher: Matcher, bot: Bot, event: Union[GroupMessageEvent], state: T_State):
+async def _(matcher: Matcher, event: Union[GroupMessageEvent]):
     white_list = [
         "liteyuki_base"
     ]
@@ -28,6 +29,13 @@ async def _(matcher: Matcher, bot: Bot, event: Union[GroupMessageEvent], state: 
         if Data(Data.groups, event.group_id).get_data("enable", True):
             pass
         else:
-            raise IgnoredException
+            raise IgnoredException("会话未启用Bot")
     else:
         pass
+
+
+@run_preprocessor
+async def _(event: MessageEvent):
+    banned_user_list = Data(Data.globals, "liteyuki").get_data("banned_users", [])
+    if event.user_id in banned_user_list:
+        raise IgnoredException("用户已被屏蔽")

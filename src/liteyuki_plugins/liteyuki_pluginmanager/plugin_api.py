@@ -245,7 +245,7 @@ def generate_plugin_image(event) -> Canvas:
             font = Font.HYWH_85w
         else:
             font = Font.MiSans_Medium
-        state = True  # check_enabled_stats(event, plugin.name)
+        state = check_enabled_stats(event, plugin.name)
         state = "on" if state else "off"
         """插件开关"""
         plugin_bg.plugin_stats_img = Img(

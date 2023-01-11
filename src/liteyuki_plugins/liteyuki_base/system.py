@@ -1,27 +1,22 @@
 import datetime
-import json
-import os
+import pickle
 import platform
 import random
 import shutil
 import time
-import traceback
-from typing import Union
 
 import psutil
-from PIL import Image
+from nonebot import *
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent, Message, NoticeEvent, Bot, MessageSegment
 from nonebot.params import CommandArg
-from nonebot.typing import T_State
+from nonebot.permission import SUPERUSER
 from nonebot.utils import run_sync
+
 from .utils import *
 from ...liteyuki_api.canvas import *
 from ...liteyuki_api.config import *
 from ...liteyuki_api.data import LiteyukiDB, Data
 from ...liteyuki_api.utils import *
-from nonebot import *
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, PrivateMessageEvent, Message, NoticeEvent, Bot, MessageSegment
-from nonebot.permission import SUPERUSER
-import pickle
 
 check_update = on_command("#检查更新", permission=SUPERUSER)
 set_auto_update = on_command("#启用自动更新", aliases={"#停用自动更新"}, permission=SUPERUSER)

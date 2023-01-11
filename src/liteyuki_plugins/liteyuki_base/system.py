@@ -47,7 +47,7 @@ async def _():
 
 
 @update.handle()
-async def _():
+async def _(event: PrivateMessageEvent):
     check_url = "https://gitee.com/snowykami/liteyuki-bot/raw/master/src/config/config.json"
     local_version_id: int = config_data.get("version_id", None)
     local_version_name: str = config_data.get("version_name", None)
@@ -66,7 +66,7 @@ async def _():
 
 
 @export_database.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+async def _(bot: Bot, event: PrivateMessageEvent):
     export_db = {"export_time": tuple(time.localtime())[0:6]}
     for collection_name in LiteyukiDB.list_collection_names():
         export_db[collection_name] = []

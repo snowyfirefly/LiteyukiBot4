@@ -38,7 +38,7 @@ data_importer = on_notice()
 
 
 @check_update.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+async def _():
     check_url = "https://gitee.com/snowykami/liteyuki-bot/raw/master/src/config/config.json"
     local_version_id: int = config_data.get("version_id", None)
     local_version_name: str = config_data.get("version_name", None)
@@ -51,7 +51,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
 
 @update.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+async def _():
     check_url = "https://gitee.com/snowykami/liteyuki-bot/raw/master/src/config/config.json"
     local_version_id: int = config_data.get("version_id", None)
     local_version_name: str = config_data.get("version_name", None)
@@ -64,7 +64,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
 
 
 @restart.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+async def _():
     await restart.send("正在重启", at_sender=True)
     restart_bot()
 
@@ -89,7 +89,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
 
 @data_importer.handle()
-async def _(bot: Bot, event: NoticeEvent, state: T_State):
+async def _(bot: Bot, event: NoticeEvent):
     eventData = event.dict()
     if str(eventData.get("user_id", None)) in bot.config.superusers:
         # 超级用户判断

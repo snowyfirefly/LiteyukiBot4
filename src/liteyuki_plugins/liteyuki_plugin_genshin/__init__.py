@@ -31,14 +31,14 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], args
 
 
 @hid_uid.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+async def _(event: Union[GroupMessageEvent, PrivateMessageEvent]):
     raw_stats = Data(Data.users, event.user_id).get_data(key="genshin.hid_uid", default=False)
     Data(Data.users, event.user_id).set_data(key="genshin.hid_uid", value=not raw_stats)
     await hid_uid.finish("已%suid遮挡" % ("关闭" if raw_stats else "开启"), at_sender=True)
 
 
 @update_resource.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+async def _():
 
     for file, url in resource_pool.items():
         await update_resource.send("正在更新：%s" % file)
@@ -47,7 +47,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
 
 @add_aliases.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], args: Message = CommandArg()):
+async def _(args: Message = CommandArg()):
     file_pool = await load_resource(add_aliases)
     args, kwargs = Command.formatToCommand(cmd=str(args))
     identify_name = args[0]

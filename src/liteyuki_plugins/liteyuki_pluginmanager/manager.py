@@ -32,7 +32,7 @@ install_all_plugin = on_command("#安装全部", permission=SUPERUSER)
 
 # help菜单
 @bot_help.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
     if str(arg).strip() == "":
         try:
             if "全部插件" in event.raw_message:
@@ -115,7 +115,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
 
 # 添加元数据
 @add_meta_data.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+async def _(arg: Message = CommandArg()):
     args, kwargs = Command.formatToCommand(Command.escape(str(arg)))
     if len(args) <= 1 or args[1] not in ["name", "description", "usage"]:
         await add_meta_data.finish("元数据参数有误", at_sender=True)
@@ -136,7 +136,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
 
 # 删除元数据
 @del_meta_data.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+async def _(arg: Message = CommandArg()):
     arg = Command.escape(str(arg))
     _plugin = search_for_plugin(arg)
     if _plugin is None:
@@ -152,7 +152,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
 
 # 隐藏插件
 @hidden_plugin.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+async def _(arg: Message = CommandArg()):
     arg = Command.escape(str(arg))
     plugin_name_input = arg
     _plugin = search_for_plugin(plugin_name_input)
@@ -169,7 +169,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
 
 # 显示插件
 @show_plugin.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+async def _(arg: Message = CommandArg()):
     arg = Command.escape(str(arg))
     plugin_name_input = arg
     _plugin = search_for_plugin(plugin_name_input)
@@ -186,7 +186,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
 
 # 安装插件
 @install_plugin.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+async def _(arg: Message = CommandArg()):
     args = str(arg).strip().split()
     suc = False
     installed_plugin = Data(Data.globals, "liteyuki").get_data("installed_plugin", [])
@@ -221,7 +221,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
 
 # 插件全装
 @install_all_plugin.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+async def _():
     suc = []
     failed = []
     installed_plugin = Data(Data.globals, "liteyuki").get_data("installed_plugin", [])
@@ -239,16 +239,16 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
             failed.append(plugin_data)
     msg = "安装成功："
     for suc_plug in suc:
-        msg += "\n- %s%s" % (suc_plug["name"], suc_plug["id"])
+        msg += f"\n- {suc_plug['name']}({suc_plug['id']})"
     msg += "\n安装失败:"
     for failed_plug in failed:
-        msg += "\n- %s%s" % (failed_plug["name"], failed_plug["id"])
+        msg += f"\n- {failed_plug['name']}({failed_plug['id']})"
     await install_all_plugin.send(msg + "\n正在重启...")
     Reloader.reload()
 
 
 @uninstall_plugin.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+async def _(arg: Message = CommandArg()):
     args = str(arg).strip().split()
     suc = False
     installed_plugin: list = Data(Data.globals, "liteyuki").get_data("installed_plugin", [])

@@ -9,17 +9,17 @@ download_resource = on_command(cmd="下载资源", aliases={"更新资源"}, per
 
 
 @echo.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], args: Message = CommandArg()):
+async def _(args: Message = CommandArg()):
     await echo.send(Message(Command.escape(str(args))))
 
 
 @liteyuki.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], args: Message = CommandArg()):
+async def _(bot: Bot):
     await liteyuki.finish("轻雪测试成功：%s" % bot.self_id)
 
 
 @download_resource.handle()
-async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
+async def _():
     pass
 
 

@@ -21,7 +21,7 @@ query_weather_now = on_message(rule=WEATHER_NOW)
 
 
 @set_key.handle()
-async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
+async def _(arg: Message = CommandArg()):
     key = str(arg)
     resp = await run_sync(simple_request_get)("https://api.qweather.com/v7/weather/now?location=101040300&key=%s" % key)
     code = (resp.json())["code"]
@@ -40,7 +40,7 @@ async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
 
 
 @bind_location.handle()
-async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
+async def _(event: MessageEvent, arg: Message = CommandArg()):
     await key_check(bind_location)
     args, kwargs = Command.formatToCommand(str(arg))
     # 输入内容
@@ -62,7 +62,7 @@ async def _(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
 
 
 @query_weather_now.handle()
-async def _(bot: Bot, event: MessageEvent, state: T_State):
+async def _(event: MessageEvent, state: T_State):
     args, kwargs = Command.formatToCommand(str(event.message))
 
     input_location = " ".join(args)

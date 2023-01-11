@@ -26,7 +26,10 @@ async def _():
 @driver.on_bot_connect
 async def _(bot: Bot):
     for superuser_id in bot.config.superusers:
-        await bot.send_private_msg(user_id=int(superuser_id), message=f"LiteyukiBot：{bot.self_id}已连接")
+        try:
+            await bot.send_private_msg(user_id=int(superuser_id), message=f"LiteyukiBot：{bot.self_id}已连接")
+        except:
+            pass
 
 
 @run_preprocessor

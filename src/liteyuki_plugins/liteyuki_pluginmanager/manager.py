@@ -1,4 +1,5 @@
 import asyncio
+import os
 import traceback
 
 import nonebot
@@ -21,8 +22,9 @@ global_enable_plugin = on_command(cmd="#全局启用", aliases={"#全局停用"}
 add_meta_data = on_command(cmd="#添加元数据", permission=SUPERUSER)
 del_meta_data = on_command(cmd="#删除元数据", permission=SUPERUSER)  # 未完成
 hidden_plugin = on_command(cmd="#隐藏插件", permission=SUPERUSER)
+show_plugin = on_command(cmd="#显示插件", permission=SUPERUSER)
 install_plugin = on_command("#install", aliases={"#安装插件"}, permission=SUPERUSER)
-uninstall_plugin = on_command("#uninstall", aliases={"#卸载插件"}, permission=SUPERUSER)
+uninstall_plugin = on_command("#uninstall", aliases={"#卸载插件", "#删除插件"}, permission=SUPERUSER)
 update_metadata = on_command("#更新元数据", permission=SUPERUSER)
 online_plugin = on_command("#插件商店")
 install_all_plugin = on_command("#安装全部", permission=SUPERUSER)
@@ -158,11 +160,29 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
         await hidden_plugin.finish("插件不存在", at_sender=True)
     else:
         _hidden_plugin = Data(Data.globals, "plugin_data").get_data(key="hidden_plugin", default=[])
-        _hidden_plugin.append(_plugin.name)
-        _hidden_plugin = set(_hidden_plugin)
-        Data(Data.globals, "plugin_data").set_data(key="hidden_plugin", value=list(_hidden_plugin))
-        await hidden_plugin.send("插件：%s隐藏成功" % _plugin.name, at_sender=True)
+        if _plugin.name not in _hidden_plugin:
+            _hidden_plugin.append(_plugin.name)
+            Data(Data.globals, "plugin_data").set_data(key="hidden_plugin", value=list(_hidden_plugin))
+            await hidden_plugin.send(f"{_plugin.metadata.name}隐藏成功", at_sender=True)
+        else:
+            await show_plugin.send(f"{_plugin.metadata.name}不在显示列表中", at_sender=True)
 
+# 显示插件
+@show_plugin.handle()
+async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
+    arg = Command.escape(str(arg))
+    plugin_name_input = arg
+    _plugin = search_for_plugin(plugin_name_input)
+    if _plugin is None:
+        await show_plugin.finish("插件不存在", at_sender=True)
+    else:
+        _hidden_plugin = Data(Data.globals, "plugin_data").get_data(key="hidden_plugin", default=[])
+        if _plugin.name in _hidden_plugin:
+            _hidden_plugin.remove(_plugin.name)
+            Data(Data.globals, "plugin_data").set_data(key="hidden_plugin", value=list(_hidden_plugin))
+            await show_plugin.send(f"{_plugin.metadata.name}显示成功", at_sender=True)
+        else:
+            await show_plugin.send(f"{_plugin.metadata.name}不在隐藏插表中", at_sender=True)
 
 # 安装插件
 @install_plugin.handle()
@@ -175,40 +195,31 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
         try:
             _plugins = await run_sync(search_plugin_info_online)(plugin_name, search_list)
             if _plugins is None:
-                await install_plugin.send("在Nonebot商店中找不到插件：%s" % plugin_name)
+                await install_plugin.send(f"在Nonebot商店中找不到插件：{plugin_name}")
             else:
                 _plugin = _plugins[0]
-                result = (await run_sync(os.popen)("pip3 install %s" % _plugin["id"])).read()
-                if "Successfully installed" in result.splitlines()[-1]:
-                    installed = True
-                elif "Requirement already satisfied" in result.splitlines()[-1]:
-                    installed = True
+                await run_sync(os.system)(f"pip3 install {_plugin['id']}")
+                module_name = _plugin["id"].replace("-", "_")
+                loaded_list_before_load = [_plugin.name for _plugin in get_loaded_plugins()]
+                if module_name in loaded_list_before_load:
+                    await install_plugin.send(f"{_plugin['name']}({_plugin['id']})已装载，无需重复安装")
                 else:
-                    await install_plugin.send("安装过程可能出现问题：%s" % result)
-                    installed = False
-                if installed:
-                    try:
-                        module_name = _plugin["id"].replace("-", "_")
-                        loaded_list = [_plugin.name for _plugin in get_loaded_plugins()]
-                        if module_name in loaded_list:
-                            await install_plugin.send("%s(%s)已装载，无需重复安装" % (_plugin["name"], _plugin["id"]))
-                        else:
-                            nonebot.load_plugin(module_name)
-                            loaded_list = [_plugin.name for _plugin in get_loaded_plugins()]
-                            if module_name in loaded_list:
-                                installed_plugin.append(module_name)
-                                await install_plugin.send("%s(%s)安装成功" % (_plugin["name"], _plugin["id"]))
-                            else:
-                                raise ImportError("安装后导入错误")
-                    except BaseException as e:
-                        await install_plugin.send("%s(%s)本身存在问题，安装失败，请联系插件作者:%s" % (_plugin["name"], _plugin["id"], traceback.format_exception(e)))
-                        nonebot.logger.info("导入错误：%s" % traceback.format_exception(e))
-                installed_plugin = list(set(installed_plugin))
-                Data(Data.globals, "liteyuki").set_data("installed_plugin", installed_plugin)
+                    nonebot.load_plugin(module_name)
+                    loaded_list_after_load = [_plugin.name for _plugin in get_loaded_plugins()]
+                    if module_name in loaded_list_after_load:
+                        installed_plugin.append(module_name)
+                        await install_plugin.send(f"{_plugin['name']}({_plugin['id']})安装成功")
+                        suc = True
+                    else:
+                        await install_plugin.send(f"{_plugin['name']}({_plugin['id']})本身存在问题，安装失败，请联系插件作者")
+                if suc:
+                    installed_plugin = list(set(installed_plugin))
+                    Data(Data.globals, "liteyuki").set_data("installed_plugin", installed_plugin)
         except BaseException as e:
             await install_plugin.send("安装时出现错误:%s" % (traceback.format_exc()))
 
 
+# 插件全装
 @install_all_plugin.handle()
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg: Message = CommandArg()):
     suc = []
@@ -217,7 +228,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
     for plugin_data in get_online_plugin_list():
         module_name = plugin_data["id"].replace("-", "_")
         try:
-            await run_sync(os.system)("pip3 install %s" % plugin_data["id"])
+            await run_sync(os.system)(f"pip3 install {plugin_data['id']}")
             nonebot.load_plugin(module_name)
             loaded_list = [_plugin.name for _plugin in get_loaded_plugins()]
             if module_name in loaded_list:
@@ -247,22 +258,12 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
         if searched_plugin is not None:
             if searched_plugin.name in installed_plugin:
                 installed_plugin.remove(searched_plugin.name)
-                try:
-                    result = (await run_sync(os.popen)("pip3 uninstall %s -y" % searched_plugin.name)).read()
-                    if "Successfully uninstalled" in result.splitlines()[-1]:
-                        await uninstall_plugin.send("%s(%s)已卸载成功" % (searched_plugin.metadata.name, searched_plugin.name))
-                        suc = True
-                    elif "it is not installed" in result.splitlines()[-1]:
-                        await uninstall_plugin.send("%s(%s)已从加载列表中移除但没有安装过，无法卸载" % (searched_plugin.metadata.name, searched_plugin.name))
-                        suc = True
-                    else:
-                        raise ImportError("插件从没装过")
-                except BaseException as e:
-                    await uninstall_plugin.send("%s(%s)已从加载列表中移除，但卸载库时出现问题，不过无大碍")
+                await run_sync(os.system)(f"pip uninstall {searched_plugin.name} -y")
+                await uninstall_plugin.send(f"{searched_plugin.metadata.name}({searched_plugin.name})卸载成功")
             else:
-                await uninstall_plugin.send("插件不在加载列表,若是手动安装的插件请手动卸载")
+                await uninstall_plugin.send(f"{searched_plugin.metadata.name}({searched_plugin.name})卸载失败：轻雪插件和手动安装的插件不可被卸载")
         else:
-            await uninstall_plugin.send("未找到插件")
+            await uninstall_plugin.send("未找到插件或插件未加载")
     Data(Data.globals, "liteyuki").set_data("installed_plugin", installed_plugin)
     if suc:
         await uninstall_plugin.send("卸载完成正在重启...")
@@ -278,7 +279,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
         searched_plugin_data_list = await run_sync(get_online_plugin_list)()
         sub_text = "插件商店总览"
     else:
-        sub_text = "插件商店中“%s”搜索结果" % str(arg).strip()
+        sub_text = f"插件商店中“{str(arg).strip()}”搜索结果"
         r1 = await run_sync(search_plugin_info_online)(str(arg).strip())
         if r1 is None:
             msg += "\n未搜索到任何内容"
@@ -303,9 +304,9 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
     )
     plugin_bg_size = bg.get_actual_pixel_size("plugin_bg")
     for i, _plugin in enumerate(searched_plugin_data_list):
-        rectangle = bg.plugin_bg.__dict__["plugin_bg_%s" % i] = Rectangle(uv_size=(1, 1), box_size=(1, line_high / plugin_bg_size[1]),
-                                                                          parent_point=(0.5, i * line_high / plugin_bg_size[1]), point=(0.5, 0),
-                                                                          fillet=0, color=(0, 0, 0, 128 if i % 2 == 0 else 0))
+        rectangle = bg.plugin_bg.__dict__[f"plugin_bg_{i}"] = Rectangle(uv_size=(1, 1), box_size=(1, line_high / plugin_bg_size[1]),
+                                                                        parent_point=(0.5, i * line_high / plugin_bg_size[1]), point=(0.5, 0),
+                                                                        fillet=0, color=(0, 0, 0, 128 if i % 2 == 0 else 0))
         installed = _plugin["id"].replace("-", "_") in loaded_plugin_id_list
         install_stats = "[已装载]" if installed else ""
         install_color = (0, 255, 0, 255) if installed else (255, 255, 255, 255)
@@ -316,4 +317,4 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent], arg:
             uv_size=(1, 1), box_size=(0.4, 0.45), parent_point=(0.5, 0.5), point=(0, 0.5), text=_plugin["id"], dp=1, color=install_color
         )
 
-    await online_plugin.send(MessageSegment.image(file="file:///%s" % await run_sync(bg.export_cache)()))
+    await online_plugin.send(MessageSegment.image(file=f"file:///{await run_sync(bg.export_cache)()}"))

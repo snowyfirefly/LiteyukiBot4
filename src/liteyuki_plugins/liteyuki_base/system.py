@@ -84,18 +84,21 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         f.close()
 
     await run_sync(export)()
-    _datetime = "%s-%s-%s-%s-%s-%s" % tuple(time.localtime())[0:6]
-    await bot.call_api("upload_private_file", user_id=event.user_id, file=f_path, name="liteyuki_%s.db" % _datetime)
+    _datetime = "-".join(list(time.localtime())[0:6])
+    await bot.call_api("upload_private_file", user_id=event.user_id, file=f_path, name=f"liteyuki_{_datetime}.db")
 
 
 @data_importer.handle()
 async def _(bot: Bot, event: NoticeEvent, state: T_State):
     eventData = event.dict()
     if str(eventData.get("user_id", None)) in bot.config.superusers:
+        # 超级用户判断
         if event.notice_type == "offline_file":
+            # 判断为文件
             file = eventData["file"]
             name: str = file.get("name", "")
             if name.startswith("liteyuki") and name.endswith(".db"):
+                # 导数据
                 url = file.get("url", "")
                 path = os.path.join(Path.cache, name)
                 await run_sync(download_file)(url, path)
@@ -109,6 +112,7 @@ async def _(bot: Bot, event: NoticeEvent, state: T_State):
                             collection.update_one(filter={"_id": document.get("_id")}, update={"$set": {key: value}}, upsert=True)
                 await bot.send_private_msg(user_id=eventData.get("user_id"), message="数据库合并完成")
             else:
+                # 存文件
                 url = file.get("url", "")
                 path = os.path.join(Path.data, "file_receive", name)
                 await run_sync(download_file)(url, path)
@@ -120,7 +124,6 @@ async def _(bot: Bot, event: NoticeEvent, state: T_State):
 async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     if len(bot.config.nickname) == 0:
         bot.config.nickname.add("轻雪")
-    msg = "轻雪状态："
     stats = await bot.get_status()
     version_info = await bot.get_version_info()
     protocol_dict = {
@@ -132,29 +135,30 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         4: "企点",
         5: "iPad"
     }
-    delta_time = datetime.datetime.now() - datetime.datetime.strptime("%s-%s-%s-%s-%s-%s" % tuple(Data(Data.globals, "liteyuki").get_data("start_time", tuple(time.localtime())[0:6])),
+    protocol_name = protocol_dict.get(version_info.get("protocol", version_info.get("protocol_name", 0)), "")
+    delta_time = datetime.datetime.now() - datetime.datetime.strptime("-".join(tuple(Data(Data.globals, "liteyuki").get_data("start_time", tuple(time.localtime())[0:6]))),
                                                                       "%Y-%m-%d-%H-%M-%S")
     delta_sec = delta_time.days * 24 * 60 * 60 + delta_time.seconds
     prop_list = [
         [
-            "%s%s" % (protocol_dict.get(version_info.get("protocol", version_info.get("protocol_name")), ""), "在线" if stats.get("online") else "离线"),
-            "群 %s" % len(await bot.get_group_list()),
-            "好友 %s" % len(await bot.get_friend_list()),
-            "插件 %s" % len(get_loaded_plugins())
+            f"{protocol_name}在线"
+            f"群 {len(await bot.get_group_list())}",
+            f"好友 {len(await bot.get_friend_list())}",
+            f"插件 {len(get_loaded_plugins())}"
 
         ],
         [
-            "收 %s 发 %s" % (stats.get("stat").get("message_received"), stats.get("stat").get("message_sent")),
-            "运行时长 %s" % time_to_hms_by_sec(delta_sec)
+            f"收 {stats.get('stat').get('message_received')} 发 {stats.get('stat').get('message_sent')}",
+            f"运行时长 {time_to_hms_by_sec(delta_sec)}"
         ],
         [
-            "版本 %s" % config_data["version_name"],
-            "适配器 %s" % version_info["app_version"]
+            f"版本 {config_data['version_name']}",
+            f"适配器 {version_info['app_version']}"
         ]
     ]
     part_3_prop = {
-        "OS": "%s %s" % (platform.system(), platform.version()),
-        "Python": "%s %s" % (platform.python_implementation(), platform.python_version()),
+        "OS": f"{platform.system()} {platform.version()}",
+        "Python": f"{platform.python_implementation()} {platform.python_version()}",
         "Signature": generate_signature
     }
     drawing_path = os.path.join(Path.data, "liteyuki/drawing")
@@ -182,7 +186,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
     high = side_up + side_down + block_distance * 2 + head_high + hardware_high + part_3_high
     if len(os.listdir(drawing_path)) > 0:
-        base_img = await run_sync(Utils.central_clip_by_ratio)(Image.open(os.path.join(Path.data, "liteyuki/drawing/%s" % random.choice(os.listdir(drawing_path)))), (width, high))
+        base_img = await run_sync(Utils.central_clip_by_ratio)(Image.open(os.path.join(Path.data, f"liteyuki/drawing/{random.choice(os.listdir(drawing_path))}")), (width, high))
     else:
         base_img = Image.new(mode="RGBA", size=(width, high), color=(255, 255, 255, 255))
     info_canvas = Canvas(base_img)
@@ -197,8 +201,8 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         uv_size=(1, content_size[1]), box_size=(1, head_high),
         parent_point=(0.5, 0), point=(0.5, 0), fillet=part_fillet, color=(0, 0, 0, block_alpha)
     )
-    user_icon_path = os.path.join(Path.cache, "u%s.png" % bot.self_id)
-    await run_sync(download_file)("http://q1.qlogo.cn/g?b=qq&nk=%s&s=640" % bot.self_id, user_icon_path)
+    user_icon_path = os.path.join(Path.cache, f"u{bot.self_id}.png")
+    await run_sync(download_file)(f"http://q1.qlogo.cn/g?b=qq&nk={bot.self_id}&s=640", user_icon_path)
     head_size = info_canvas.get_actual_pixel_size("content.head")
     info_canvas.content.head.icon = Img(
         uv_size=(1, 1), box_size=(0.75, 0.75), parent_point=(min(head_size) / 2 / max(head_size), 0.5), point=(0.5, 0.5),
@@ -217,7 +221,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
             prop_text_list.append(TextSegment(prop_str, color=(240, 240, 240, 255)))
             prop_text_list.append(TextSegment(" | ", color=(168, 168, 168, 255)))
         del prop_text_list[-1]
-        info_canvas.content.head.__dict__["label_%s" % i] = Text(
+        info_canvas.content.head.__dict__[f"label_{i}"] = Text(
             uv_size=(1, 1), box_size=(0.6, 0.1), parent_point=(nickname_pos[0], nickname_pos[3] + 0.08 + 0.16 * i), point=(0, 0), text=prop_text_list, force_size=True, font=default_font
         )
     """hardware block"""
@@ -232,9 +236,9 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
             "name": "CPU",
             "percent": psutil.cpu_percent(),
             "sub_prop": [
-                "物理核心 %s" % psutil.cpu_count(logical=False),
-                "逻辑处理器 %s" % psutil.cpu_count(),
-                "%.1fMHz" % average([percpu.current for percpu in psutil.cpu_freq(percpu=True)])
+                "物理核心 {psutil.cpu_count(logical=False)}",
+                "逻辑处理器 psutil.cpu_count()",
+                f"{round(average([percpu.current for percpu in psutil.cpu_freq(percpu=True)]), 1)}MHz"
             ]
         },
         {
@@ -242,10 +246,10 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
             "percent": psutil.virtual_memory().used / psutil.virtual_memory().total * 100,
             "percent2": psutil.Process(os.getpid()).memory_info().rss / psutil.virtual_memory().total * 100,
             "sub_prop": [
-                "Bot %s" % size_text(psutil.Process(os.getpid()).memory_info().rss),
-                "已用 %s" % size_text(psutil.virtual_memory().used),
-                "空闲 %s" % size_text(psutil.virtual_memory().free),
-                "总计 %s" % size_text(psutil.virtual_memory().total)
+                f"Bot {size_text(psutil.Process(os.getpid()).memory_info().rss)}",
+                f"已用 {size_text(psutil.virtual_memory().used)}",
+                f"空闲 {size_text(psutil.virtual_memory().free)}",
+                f"总计 {size_text(psutil.virtual_memory().total)}"
             ]
         }
     ]
@@ -255,7 +259,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         arc_bg = Graphical.arc(160, 0, 360, width=40, color=usage_base_color)
         arc_up = Graphical.arc(160, 0, 360 * sub_part["percent"] / 100, width=40, color=arc_color)
 
-        part = hardware.__dict__["part_%s" % part_i] = Panel(
+        part = hardware.__dict__[f"part_{part_i}"] = Panel(
             uv_size=(1, 1), box_size=(1 / len(hardware_part), 1), parent_point=(point_x, 0.4), point=(0.5, 0.5)
         )
         part.arc_bg = Img(uv_size=(1, 1), box_size=(0.6, 0.5), parent_point=(0.5, 0.4), point=(0.5, 0.5), img=arc_bg)
@@ -264,14 +268,14 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         part.arc_bg.percent_text = Text(
             uv_size=(1, 1), box_size=(0.55, 0.15), parent_point=(0.5, 0.5), point=(0.5, 0.5), text="%.1f" % sub_part["percent"] + "%", font=default_font, dp=1, force_size=True
         )
-        arc_pos = info_canvas.get_parent_box("content.hardware.part_%s.arc_bg" % part_i)
+        arc_pos = info_canvas.get_parent_box(f"content.hardware.part_{part_i}.arc_bg")
         part.name = Text(uv_size=(1, 1), box_size=(1, 0.08), parent_point=(0.5, arc_pos[3] + 0.03), point=(0.5, 0), text=sub_part["name"], force_size=True, font=default_font)
-        last_pos = info_canvas.get_parent_box("content.hardware.part_%s.name" % part_i)
+        last_pos = info_canvas.get_parent_box(f"content.hardware.part_{part_i}.name")
         for sub_prop_i, sub_prop in enumerate(sub_part["sub_prop"]):
-            part.__dict__["sub_prop_%s" % sub_prop_i] = Text(
+            part.__dict__[f"sub_prop_{sub_prop_i}"] = Text(
                 uv_size=(1, 1), box_size=(1, 0.05), parent_point=(0.5, last_pos[3] + 0.02), point=(0.5, 0), text=sub_prop, force_size=True, color=(192, 192, 192, 255), font=default_font
             )
-            last_pos = info_canvas.get_parent_box("content.hardware.part_%s.sub_prop_%s" % (part_i, sub_prop_i))
+            last_pos = info_canvas.get_parent_box(f"content.hardware.part_{part_i}.sub_prop_{sub_prop_i}")
 
     part_3 = info_canvas.content.part_3 = Rectangle(
         uv_size=(1, content_size[1]), box_size=(1, part_3_high),
@@ -281,7 +285,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     point_y = distance_of_part_3_sub_part / part_3_pixel_size[1]
     for disk_i, disk in enumerate(psutil.disk_partitions()):
         disk_usage = psutil.disk_usage(disk.device)
-        disk_panel = part_3.__dict__["disk_panel_%s" % disk_i] = Panel(
+        disk_panel = part_3.__dict__[f"disk_panel_{disk_i}"] = Panel(
             uv_size=(1, 1), box_size=(1, single_disk_high / part_3_pixel_size[1]), parent_point=(0.5, point_y + disk_i * (disk_distance + single_disk_high) / part_3_pixel_size[1]),
             point=(0.5, 0)
         )
@@ -298,11 +302,11 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
         disk_panel.usage_bg.usage_text = Text(
             uv_size=(1, 1), box_size=(1, 0.6), parent_point=(0.5, 0.5), point=(0.5, 0.5),
-            text="%.1f%%  可用%s 共%s" % (disk_usage.used / disk_usage.total * 100, size_text(disk_usage.free, dec=1), size_text(disk_usage.total, dec=1)), font=default_font
+            text=f"{round(disk_usage.used / disk_usage.total * 100, 1)}% 可用{size_text(disk_usage.free, dec=1)} 共{size_text(disk_usage.total, dec=1)}", font=default_font
         )
     point_y += (len(psutil.disk_partitions()) * (single_disk_high + disk_distance) + distance_of_part_3_sub_part) / part_3_pixel_size[1]
     for prop_i, prop_dict in enumerate(part_3_prop.items()):
-        prop_panel = part_3.__dict__["prop_panel_%s" % prop_i] = Panel(
+        prop_panel = part_3.__dict__[f"prop_panel_{prop_i}"] = Panel(
             uv_size=(1, 1), box_size=(1, part_3_prop_high / part_3_pixel_size[1]),
             parent_point=(0.5, point_y + prop_i * (part_3_prop_high + distance_of_part_3_sub_part) / part_3_pixel_size[1]),
             point=(0.5, 0)
@@ -313,11 +317,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         prop_panel.value = Text(
             uv_size=(1, 1), box_size=(0.25, 0.6), parent_point=(0.95, 0.5), point=(1, 0.5), text=prop_dict[1], force_size=True, font=default_font
         )
-
-    # info_canvas.signature = Text(
-    #     uv_size=(1, 1), box_size=(1, 0.025), parent_point=(0.5, 0.997), point=(0.5, 1), text=generate_signature, font=default_font, color=(80, 80, 80, 255)
-    # )
-    await liteyuki_bot_info.send(MessageSegment.image(file="file:///%s" % await run_sync(info_canvas.export_cache)()))
+    await liteyuki_bot_info.send(MessageSegment.image(file=f"file:///{await run_sync(info_canvas.export_cache)()}"))
     await run_sync(info_canvas.delete)()
 
 
@@ -343,7 +343,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
         size = size_text(size_int)
         await run_sync(shutil.rmtree)(Path.cache)
         await run_sync(os.makedirs)(Path.cache)
-        await clear_cache.send(message="缓存清除成功：%s" % size)
+        await clear_cache.send(message=f"缓存清除成功：{size}")
     else:
         if not os.path.exists(Path.cache):
             os.makedirs(Path.cache)

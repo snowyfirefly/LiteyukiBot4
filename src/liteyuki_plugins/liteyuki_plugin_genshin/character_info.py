@@ -25,7 +25,7 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
     args, kwargs = Command.formatToCommand(event.raw_message)
     character_name_input = args[0].strip().replace("面板", "").replace("#", "")
     if character_name_input == "更新":
-        raise IgnoredException
+        raise IgnoredException("此为更新所有原神角色数据")
     _break = False
     lang = "en"
     hd = kwargs.get("hd", "false")
@@ -211,11 +211,10 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
         44: "FIGHT_PROP_WIND_ADD_HURT",
         45: "FIGHT_PROP_ROCK_ADD_HURT",
         46: "FIGHT_PROP_ICE_ADD_HURT",
-        26: "FIGHT_PROP_HEAL_ADD",
+        26: "FIGHT_PROP_HEAL_ADD",  # 治疗
     }
     times = 0
     for fight_prop_id, fight_prop_name in addition_props.items():
-
         if fight_prop[str(fight_prop_id)] > 0:
             times += 1
             prop_dict[fight_prop_name] = {
@@ -223,7 +222,7 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
                 "accuracy": 1,
                 "value": fight_prop[str(fight_prop_id)]
             }
-        if times >= 3:
+        if times >= 2:
             break
 
     try:
@@ -258,7 +257,7 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
         """Part-1"""
         """角色立绘，命座，天赋，名称，等级，好感度"""
         canvas.part_1.avatar_img = Img(uv_size=(1, 1), box_size=(2, 1.0), parent_point=(0.5, 0.55), point=(0.5, 0.5), img=character_wish_img)
-        canvas.part_1.name = Text(uv_size=(1, 1), box_size=(0.66, 0.06), parent_point=(0.03061 * 3, 0.06),
+        canvas.part_1.name = Text(uv_size=(1, 1), box_size=(0.66, 0.06), parent_point=(0.03061 * 3, 0.04),
                                   point=(0, 0), text=get_lang_word(str(character_hash_id), lang, file_pool["loc.json"]), font=hywh_font)
         name_pos = await run_sync(canvas.get_actual_box)("part_1.name")
         if character_name_input != entry:
@@ -266,13 +265,13 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
             canvas.part_1.other_name = Text(uv_size=(1, 1), box_size=(0.36, 0.04), parent_point=((name_pos[2] + 0.005) * 3, name_pos[3]),
                                             point=(0, 1), text="(%s)" % character_name_input, font=hywh_font, color=(180, 180, 180, 255), force_size=True)
         """等级基础值"""
-        canvas.part_1.level = Text(uv_size=(1, 1), box_size=(0.9, 0.04), parent_point=(0.03061 * 3, 0.17), point=(0, 0),
+        canvas.part_1.level = Text(uv_size=(1, 1), box_size=(0.9, 0.04), parent_point=(0.03061 * 3, name_pos[3] + 0.02), point=(0, 0),
                                    text=("%s %s/%s" % (get_lang_word("level", lang, file_pool["loc.json"]), player_character_data["propMap"]["4001"]["val"],
                                                        rank_level[int(player_character_data["propMap"]["1002"].get("val", 0))])),
                                    font=hywh_font, force_size=True)
         level_pos = await run_sync(canvas.get_actual_box)("part_1.level")
 
-        canvas.part_1.love_icon = Img(uv_size=(1, 1), box_size=(0.9, 0.05), parent_point=(0.0306 * 3, 0.24),
+        canvas.part_1.love_icon = Img(uv_size=(1, 1), box_size=(0.9, 0.05), parent_point=(0.0306 * 3, level_pos[3] + 0.01),
                                       point=(0, 0), img=Image.open(os.path.join(Path.res, "textures", "genshin", "love.png")))
         love_icon_pos = canvas.get_actual_box("part_1.love_icon")
         canvas.part_1.love_level = Text(uv_size=(1, 1), box_size=(0.9, 0.04), parent_point=(love_icon_pos[2] * 3 + 0.03, (love_icon_pos[1] + love_icon_pos[3]) / 2),
@@ -293,28 +292,28 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
             await run_sync(enka_resource_detect)(constellation_texture_name)
             if i + 1 <= constellation_num:
                 # 已解锁命之座,先放底图，再放材质图
-                canvas.part_1.__dict__["base_%s" % i] = Img(uv_size=(1, 1), box_size=(0.3, base_size), parent_point=(x0, y0 + i * constellation_distance),
-                                                            point=(0.5, 0.5),
-                                                            img=Image.open(os.path.join(Path.res, "textures", "genshin", "constellation_%s_unlocked.png" % greece_element)))
-                canvas.part_1.__dict__["const_%s" % i] = Img(uv_size=(1, 1), box_size=(0.3, texture_size), parent_point=(x0, y0 + i * constellation_distance),
-                                                             point=(0.5, 0.5),
-                                                             img=Image.open(os.path.join(Path.cache, "genshin", "%s.png" % constellation_texture_name)))
+                canvas.part_1.__dict__[f"base_{i}"] = Img(uv_size=(1, 1), box_size=(0.3, base_size), parent_point=(x0, y0 + i * constellation_distance),
+                                                          point=(0.5, 0.5),
+                                                          img=Image.open(os.path.join(Path.res, "textures", "genshin", "constellation_%s_unlocked.png" % greece_element)))
+                canvas.part_1.__dict__[f"const_{i}"] = Img(uv_size=(1, 1), box_size=(0.3, texture_size), parent_point=(x0, y0 + i * constellation_distance),
+                                                           point=(0.5, 0.5),
+                                                           img=Image.open(os.path.join(Path.cache, "genshin", "%s.png" % constellation_texture_name)))
             else:
-                # 先放材质图，再放底图遮盖，最后加锁
+                # 未解锁命之座 先放材质图，再放底图遮盖，最后加锁
                 texture_img = await run_sync(
                     ImageEnhance.Brightness(Image.open(os.path.join(Path.cache, "genshin", "%s.png" % constellation_texture_name)).convert("RGBA")).enhance)(0.5)
                 base_img = await run_sync(
                     ImageEnhance.Brightness(Image.open(os.path.join(Path.res, "textures", "genshin", "constellation_%s_locked.png" % greece_element)).convert("RGBA")).enhance)(
                     0.75)
-                canvas.part_1.__dict__["const_%s" % i] = Img(uv_size=(1, 1), box_size=(0.3, base_size), parent_point=(x0, y0 + i * constellation_distance),
-                                                             point=(0.5, 0.5),
-                                                             img=base_img)
-                canvas.part_1.__dict__["base_%s" % i] = Img(uv_size=(1, 1), box_size=(0.3, texture_size), parent_point=(x0, y0 + i * constellation_distance),
-                                                            point=(0.5, 0.5),
-                                                            img=texture_img)
-                canvas.part_1.__dict__["lock_%s" % i] = Img(uv_size=(1, 1), box_size=(0.3, 0.032), parent_point=(x0, y0 + i * constellation_distance),
-                                                            point=(0.5, 0.5),
-                                                            img=Image.open(os.path.join(Path.res, "textures", "genshin", "locked.png")))
+                canvas.part_1.__dict__[f"const_{i}"] = Img(uv_size=(1, 1), box_size=(0.3, base_size), parent_point=(x0, y0 + i * constellation_distance),
+                                                           point=(0.5, 0.5),
+                                                           img=base_img)
+                canvas.part_1.__dict__[f"base_{i}"] = Img(uv_size=(1, 1), box_size=(0.3, texture_size), parent_point=(x0, y0 + i * constellation_distance),
+                                                          point=(0.5, 0.5),
+                                                          img=texture_img)
+                canvas.part_1.__dict__[f"lock_{i}"] = Img(uv_size=(1, 1), box_size=(0.3, 0.032), parent_point=(x0, y0 + i * constellation_distance),
+                                                          point=(0.5, 0.5),
+                                                          img=Image.open(os.path.join(Path.res, "textures", "genshin", "locked.png")))
 
         """P1天赋部分"""
         x0 = 0.2959 * 3
@@ -361,50 +360,52 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
         # 武器图
 
         start_line_x = 0.016938 * 3
-        end_line_x = 0.32306 * 3
-        start_line_y = 0.4
         star = weapon["flat"]["rankLevel"]
         """武器贴图缓存检测"""
         await run_sync(enka_resource_detect)(weapon["flat"]["icon"])
         """武器贴图"""
-        canvas.part_2.weapon_icon = Img(uv_size=(1, 1), box_size=(0.54, 0.25), parent_point=(start_line_x, 0.05),
+        canvas.part_2.weapon_icon = Img(uv_size=(1, 1), box_size=(0.54, 0.25), parent_point=(start_line_x, 0.02),
                                         point=(0, 0), img=Image.open(os.path.join(Path.cache, "genshin", "%s.png" % weapon["flat"]["icon"])))
         """武器贴图位置"""
-        weapon_pos = await run_sync(canvas.get_actual_box)("part_2.weapon_icon")
+        weapon_pos = await run_sync(canvas.get_parent_box)("part_2.weapon_icon")
         canvas.part_2.weapon_icon.weapon_bar = Img(
             uv_size=(1, 1), box_size=(1, 0.25), parent_point=(0.5, 1),
             point=(0.5, 0.5), img=Image.open(os.path.join(Path.res, "textures/genshin/weapon_bar_star_%s.png" % star))
         )
         """武器名"""
-        canvas.weapon_name = Text(uv_size=(1, 1), box_size=(0.18, 0.05), parent_point=(weapon_pos[2] + 0.019, weapon_pos[1] + 0.03),
-                                  point=(0, 0), text=get_lang_word(weapon["flat"]["nameTextMapHash"], lang, loc=file_pool["loc.json"]), font=hywh_font)
+        canvas.part_2.weapon_name = Text(uv_size=(1, 1), box_size=(0.6, 0.05), parent_point=(weapon_pos[2] + 0.06, weapon_pos[1] + 0.03),
+                                         point=(0, 0), text=get_lang_word(weapon["flat"]["nameTextMapHash"], lang, loc=file_pool["loc.json"]), font=hywh_font)
 
         """武器星级"""
-        canvas.weapon_star = Img(uv_size=(1, 1), box_size=(0.25, 0.04), parent_point=((weapon_pos[0] + weapon_pos[2]) / 2, weapon_pos[3]),
-                                 point=(0.5, 1), img=Image.open(os.path.join(Path.res, "textures/genshin/star_%s.png" % star)))
+        canvas.part_2.weapon_star = Img(uv_size=(1, 1), box_size=(0.25, 0.04), parent_point=((weapon_pos[0] + weapon_pos[2]) / 2, weapon_pos[3]),
+                                        point=(0.5, 1), img=Image.open(os.path.join(Path.res, "textures/genshin/star_%s.png" % star)))
 
         """武器属性部分，武器属性底图"""
-        canvas.part_2.weapon_info = Rectangle(uv_size=(1, 1), box_size=(0.4593, 0.155), parent_point=(0.4898, 0.155),
+        canvas.part_2.weapon_info = Rectangle(uv_size=(1, 1), box_size=(0.4593, 0.155), parent_point=(0.4898, (weapon_pos[3] + weapon_pos[1]) / 2.4),
                                               point=(0, 0), color=(0, 0, 0, 80), fillet=base_fillet)
-
-        stats_distance = 0.4
-        x0 = 0.1
+        # 武器属性图上的内容锚点坐标
+        x0 = 0.075
         y0 = 0.25
         y1 = 0.75
+
         for i, stats in enumerate(weapon["flat"]["weaponStats"]):
-            canvas.part_2.weapon_info.__dict__["prop_icon_%s" % i] = Img(uv_size=(1, 1), box_size=(0.22, 0.21), parent_point=(x0 + i * stats_distance, y0),
-                                                                         point=(0.5, 0.5),
-                                                                         img=Image.open(os.path.join(Path.res, "textures/genshin/%s.png" % stats["appendPropId"])))
-            icon_pos = await run_sync(canvas.get_parent_box)("part_2.weapon_info.prop_icon_%s" % i)
+            canvas.part_2.weapon_info.__dict__[f"prop_icon_{i}"] = Img(uv_size=(1, 1), box_size=(0.22, 0.21), parent_point=(x0, y0),
+                                                                       point=(0, 0.5),
+                                                                       img=Image.open(os.path.join(Path.res, "textures/genshin/%s.png" % stats["appendPropId"])))
+            icon_pos = await run_sync(canvas.get_parent_box)(f"part_2.weapon_info.prop_icon_{i}")
+
             if stats["appendPropId"] in percent_prop:
                 value = str(stats["statValue"]) + "%"
             else:
                 value = str(stats["statValue"])
-            canvas.part_2.weapon_info.__dict__["prop_value_%s" % i] = Text(uv_size=(1, 1), box_size=(0.5, 0.21), parent_point=(icon_pos[2] + 0.03, y0),
-                                                                           point=(0, 0.5), text=value, font=hywh_font, force_size=True)
+            canvas.part_2.weapon_info.__dict__[f"prop_value_{i}"] = Text(uv_size=(1, 1), box_size=(0.5, 0.21), parent_point=(icon_pos[2] + 0.03, y0),
+                                                                         point=(0, 0.5), text=value, font=hywh_font, force_size=True)
+            value_pos = await run_sync(canvas.get_parent_box)(f"part_2.weapon_info.prop_value_{i}")
+            x0 = value_pos[2] + 0.06
 
         """武器等级"""
-        canvas.part_2.weapon_info.level = Text(uv_size=(1, 1), box_size=(0.5, 0.2), parent_point=(x0 - 0.05, y1),
+        x0 = 0.075
+        canvas.part_2.weapon_info.level = Text(uv_size=(1, 1), box_size=(0.5, 0.2), parent_point=(x0, y1),
                                                point=(0, 0.5),
                                                text="%s %s/%s" % (
                                                    get_lang_word("level", lang, file_pool["loc.json"]), weapon["weapon"]["level"],
@@ -417,19 +418,20 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
         else:
             refine = 0
         """精炼度"""
-        canvas.part_2.weapon_info.refine = Text(uv_size=(1, 1), box_size=(0.5, 0.2), parent_point=(0.8, y1),
-                                                point=(0, 0.5),
+        canvas.part_2.weapon_info.refine = Text(uv_size=(1, 1), box_size=(0.5, 0.2), parent_point=(1 - x0, y1),
+                                                point=(1, 0.5),
                                                 text="R%s" % (refine + 1),
                                                 font=hywh_font, force_size=True, color=Color.hex2dec("FFFFEE00" if refine == 4 else "FFFFFFFF"))
         line = 0
-        prop_line_distance = 0.06
-        prop_start_y = 0.35
+        prop_line_distance = 0.055
+        prop_start_y = weapon_pos[3] + 0.04
         alpha = 80
         """角色详细属性部分"""
         """属性浅色底图"""
         canvas.part_2.prop_base = Rectangle(uv_size=(1, 1), box_size=(0.95, prop_line_distance * len(prop_dict)),
                                             parent_point=(0.5, prop_start_y + line * prop_line_distance), point=(0.5, 0),
                                             color=(0, 0, 0, 80), fillet=base_fillet)
+        prop_base_pos_on_parent = await run_sync(canvas.get_parent_box)("part_2.prop_base")
         for prop_name, prop_data in prop_dict.items():
             """prop_name: 属性键名 prop_data: 原始数据"""
 
@@ -445,10 +447,10 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
             prop_base.prop_icon = Img(uv_size=(1, 1), box_size=(0.5, 0.5), parent_point=(0.05, 0.5), point=(0.5, 0.5),
                                       img=Image.open(os.path.join(Path.res, "textures", "genshin", "%s.png" % prop_name)))
             """属性可读名称"""
-            prop_base.prop_show_name = Text(uv_size=(1, 1), box_size=(0.8, 0.5), parent_point=(0.1, 0.5), point=(0, 0.5), font=hywh_font, dp=1, force_size=True,
+            prop_base.prop_show_name = Text(uv_size=(1, 1), box_size=(0.8, 0.55), parent_point=(0.1, 0.5), point=(0, 0.5), font=hywh_font, dp=1, force_size=True,
                                             text=file_pool["loc.json"].get(lang, file_pool["loc.json"]["en"]).get(prop_name, prop_name))
             if prop_data["type"] == "int1":
-                prop_base.value = Text(uv_size=(1, 1), box_size=(0.6, 0.4), parent_point=(0.98, 0.32), point=(1, 0.5), font=hywh_font, force_size=True, dp=1,
+                prop_base.value = Text(uv_size=(1, 1), box_size=(0.6, 0.45), parent_point=(0.98, 0.32), point=(1, 0.5), font=hywh_font, force_size=True, dp=1,
                                        text=str(int(prop_data["value"])))
                 prop_base.add = Text(uv_size=(1, 1), box_size=(0.6, 0.33), parent_point=(0.98, 0.72), point=(1, 0.5), font=hywh_font, force_size=True, dp=1,
                                      text="+" + str(int(prop_data["add"])), color=Color.hex2dec("FF05C05F"))
@@ -456,16 +458,16 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
                 prop_base.base = Text(uv_size=(1, 1), box_size=(0.6, 0.33), parent_point=(add_pos[0], 0.72), point=(1, 0.5), font=hywh_font, force_size=True, dp=1,
                                       text=str(int(prop_data["base"])))
             elif prop_data["type"] == "int2":
-                prop_base.value = Text(uv_size=(1, 1), box_size=(0.4, 0.45),
+                prop_base.value = Text(uv_size=(1, 1), box_size=(0.4, 0.5),
                                        parent_point=(0.98, 0.5), point=(1, 0.5), text=str(int(prop_data["value"])), font=hywh_font, force_size=True)
             elif prop_data["type"] == "percent":
-                prop_base.value = Text(uv_size=(1, 1), box_size=(0.4, 0.45),
+                prop_base.value = Text(uv_size=(1, 1), box_size=(0.4, 0.5),
                                        parent_point=(0.98, 0.5), point=(1, 0.5), text=str(round(prop_data["value"] * 100, prop_data.get("accuracy", 1))) + "%", font=hywh_font,
                                        force_size=True)
             line += 1
 
         """圣遗物部分"""
-        y0 = 0.06
+        y0 = 0.04
         artifact_distance = 0.15
         artifact_pos = [x0, y0, 0, 0]
         artifact_i = 0
@@ -474,14 +476,19 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
             """圣遗物底图"""
             artifact_bg = Rectangle(uv_size=(1, 1), box_size=(0.9, 0.1428), parent_point=(0.5, y0 + artifact_distance * artifact_i), point=(0.5, 0), fillet=base_fillet,
                                     color=(0, 0, 0, 80), keep_ratio=False)
-            canvas.part_3.__dict__["artifact_%s" % artifact_i] = artifact_bg
+            canvas.part_3.__dict__[f"artifact_{artifact_i}"] = artifact_bg
             """圣遗物贴图"""
             artifact_bg.icon = Img(uv_size=(1, 1), box_size=(0.5, 1), parent_point=(0, 0), point=(0, 0),
-                                   img=Image.open(os.path.join(Path.cache, "genshin", "%s.png" % artifact["flat"]["icon"])))
-            artifact_texture_pos = canvas.get_parent_box("part_3.artifact_%s.icon" % artifact_i)
+                                   img=Image.open(os.path.join(Path.cache, f'genshin/{artifact["flat"]["icon"]}.png')))
+            """圣遗物类型贴图"""
+            artifact_bg.icon.type = Img(
+                uv_size=(1, 1), box_size=(0.3, 0.3), parent_point=(0.03, 0.03), point=(0, 0),
+                img=Image.open(os.path.join(Path.res, f'textures/genshin/{artifact["flat"]["equipType"]}.png'))
+            )
+            artifact_texture_pos = canvas.get_parent_box(f"part_3.artifact_{artifact_i}.icon")
             """圣遗物星级图"""
             artifact_bg.star = Img(uv_size=(1, 1), box_size=(0.5, 0.2), parent_point=((artifact_texture_pos[0] + artifact_texture_pos[2]) / 2, artifact_texture_pos[3] - 0.09),
-                                   point=(0.5, 1), img=Image.open(os.path.join(Path.res, "textures", "genshin", "star_%s.png" % artifact["flat"]["rankLevel"])))
+                                   point=(0.5, 1), img=Image.open(os.path.join(Path.res, "textures", "genshin", f'star_{artifact["flat"]["rankLevel"]}.png')))
             main_attr = artifact["flat"]["reliquaryMainstat"]["mainPropId"]
             main_attr_value = artifact["flat"]["reliquaryMainstat"]["statValue"]
             if main_attr in percent_prop:
@@ -491,15 +498,15 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
 
             artifact_bg.main_attr = Img(uv_size=(1, 1), box_size=(0.5, 0.25),
                                         parent_point=(0.25, 0.185), point=(0, 0),
-                                        img=Image.open(os.path.join(Path.res, "textures", "genshin", "%s.png" % main_attr)))
+                                        img=Image.open(os.path.join(Path.res, "textures", "genshin", f"{main_attr}.png")))
             artifact_bg.main_attr_value = Text(uv_size=(1, 1), box_size=(0.5, 0.2),
                                                parent_point=(0.25, 0.65), point=(0, 0), text=value, font=hywh_font, force_size=True)
-            canvas.draw_line("part_3.artifact_%s" % artifact_i, p1=(0.465, 0.12), p2=(0.465, 0.88), color=(80, 80, 80, 255), width=3)
-            canvas.draw_line("part_3.artifact_%s" % artifact_i, p1=(0.48, 0.44), p2=(0.95, 0.44), color=(80, 80, 80, 255), width=3)
-            canvas.draw_line("part_3.artifact_%s" % artifact_i, p1=(0.48, 0.9), p2=(0.95, 0.9), color=(80, 80, 80, 255), width=3)
-            canvas.draw_line("part_3.artifact_%s" % artifact_i, p1=(0.45, 0.5), p2=(0.25, 0.5), color=(80, 80, 80, 255), width=3)
+            canvas.draw_line(f"part_3.artifact_{artifact_i}", p1=(0.465, 0.12), p2=(0.465, 0.88), color=(80, 80, 80, 255), width=3)
+            canvas.draw_line(f"part_3.artifact_{artifact_i}", p1=(0.48, 0.44), p2=(0.95, 0.44), color=(80, 80, 80, 255), width=3)
+            canvas.draw_line(f"part_3.artifact_{artifact_i}", p1=(0.48, 0.9), p2=(0.95, 0.9), color=(80, 80, 80, 255), width=3)
+            canvas.draw_line(f"part_3.artifact_{artifact_i}", p1=(0.45, 0.5), p2=(0.25, 0.5), color=(80, 80, 80, 255), width=3)
             artifact_bg.level = Text(uv_size=(1, 1), box_size=(0.5, 0.18), parent_point=(0.33, 0.17),
-                                     point=(0, 0), text="+" + str(artifact["reliquary"]["level"] - 1), font=hywh_font, force_size=True)
+                                     point=(0, 0), text=" +" + str(artifact["reliquary"]["level"] - 1), font=hywh_font, force_size=True, fillet=5, fill=(255, 255, 255, 60), rectangle_side=2)
             x10 = 0.5
             y10 = 0.19
             dx = 0.25
@@ -521,7 +528,7 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
                     uv_size=(1, 1), box_size=(0.5, 0.2),
                     parent_point=(x + 0.07, y), point=(0, 0), text=value, font=hywh_font, force_size=True)
 
-        """圣遗物套装效果"""
+        """圣遗物套装效果 Part2"""
         artifact_set_words = []
         for sets in artifact_set_dict.items():
             sets = list(sets)
@@ -534,32 +541,35 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
             elif sets[1] >= 2:
                 sets[1] = 2
                 artifact_set_words.append(sets)
-        dy = 0.05
-        set_word = Panel(uv_size=(1, 1), box_size=(1, 0.1428), parent_point=(0.5, y0 + artifact_distance * (artifact_i + 1)), point=(0.5, 0))
-        canvas.part_3.set_word = set_word
 
+        set_word = canvas.part_2.artifact_set_info = Panel(
+            uv_size=(1, 1), box_size=(1, 0.15), parent_point=(0.5, clamp(prop_base_pos_on_parent[3] + 0.01, 0.8, 1)), point=(0.5, 0)
+        )
         for w_i, word in enumerate(artifact_set_words):
             set_word.__dict__["text_%s" % w_i] = Text(
-                uv_size=(1, 1), box_size=(0.5, 0.25), parent_point=(0.3, w_i * 0.26 + 0.1), point=(0, 0),
-                text=get_lang_word(word[0], lang, file_pool["loc.json"]) + ": " + str(word[1]),
-                font=hywh_font, color=Color.hex2dec("FF44ff00"))
-        set_word.flower = Img(uv_size=(1, 1), box_size=(0.8, 0.8),
-                              parent_point=(0.04, 0.5), point=(0, 0.5),
-                              img=Image.open(os.path.join(Path.res, "textures", "genshin", "flower.png")))
+                uv_size=(1, 1), box_size=(1, 0.25), parent_point=(0.5, 0.3 * w_i), point=(0.5, 0),
+                text=f' {get_lang_word(word[0], lang, file_pool["loc.json"]) + ": " + str(word[1])} ',
+                font=hywh_font, color=Color.hex2dec("FF44ff00"), fillet=5, fill=(255, 255, 255, 60), rectangle_side=2)
+
         ad_panel = canvas.part_3.ad_part = Rectangle(
-            uv_size=(1, 1), box_size=(1, 0.1428), parent_point=(0.5, y0 + artifact_distance * (artifact_i + 1)), point=(0.5, 0),
+            uv_size=(1, 1), box_size=(0.9, 0.1428), parent_point=(0.5, y0 + artifact_distance * (artifact_i + 1)), point=(0.5, 0),
             color=(0, 0, 0, 80), fillet=base_fillet
         )
-        ad_panel_size = canvas.get_actual_pixel_size("part_3.ad_part")
+        ad_panel_size = await run_sync(canvas.get_actual_pixel_size)("part_3.ad_part")
         ad_path = os.path.join(Path.data, "liteyuki/ads")
-
         if len(os.listdir(ad_path)) > 0:
             ad_img_path = os.path.join(ad_path, random.choice(os.listdir(ad_path)))
             ad_img = Image.open(ad_img_path)
             ad_panel.ad_img = Img(
                 uv_size=(1, 1), box_size=(1, 1),
-                parent_point=(0.5, 0.5), point=(0.5, 0.5), img=Graphical.rectangle(size=ad_panel_size, fillet=base_fillet,
-                                                                                   img=ad_img)
+                parent_point=(0.5, 0.5), point=(0.5, 0.5), img=await run_sync(Graphical.rectangle)(size=ad_panel_size, fillet=base_fillet,
+                                                                                                   img=ad_img)
+            )
+            ad_name = f'  {".".join(os.path.basename(ad_img_path).replace("#", "").split(".")[0:-1])}  '
+            ad_panel.ad_img.text = Text(
+                uv_size=(1, 1), box_size=(1, 0.15),
+                parent_point=(0, 1), point=(0, 1), text=ad_name,
+                fillet=base_fillet, fill=(0, 0, 0, 120), dp=1
             )
 
         times = "%s-%s-%s %s:%s" % tuple(player_data.get("time", list(time.localtime())[0:5]))
@@ -578,4 +588,3 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
     except BaseException as e:
         await bot.delete_msg(message_id=msg_id)
         await character_card.finish("数据资源可能缺失或出现错误，请检查:%s\n请尝试发送「原神资源更新」以更新资源" % traceback.format_exception(e), at_sender=True)
-

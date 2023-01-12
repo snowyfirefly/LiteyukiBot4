@@ -222,7 +222,7 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
                 "accuracy": 1,
                 "value": fight_prop[str(fight_prop_id)]
             }
-        if times >= 2:
+        if times >= 3:
             break
 
     try:

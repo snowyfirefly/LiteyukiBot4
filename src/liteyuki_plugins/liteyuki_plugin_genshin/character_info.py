@@ -1,3 +1,4 @@
+import copy
 import json
 import time
 import traceback
@@ -204,7 +205,7 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
     }
     addition_props = {
         30: "FIGHT_PROP_PHYSICAL_ADD_HURT",
-        40: "FIGHT_PROP_FIRE_ADD_HURT",
+        # 40: "FIGHT_PROP_FIRE_ADD_HURT",
         41: "FIGHT_PROP_ELEC_ADD_HURT",
         42: "FIGHT_PROP_WATER_ADD_HURT",
         43: "FIGHT_PROP_GRASS_ADD_HURT",
@@ -212,18 +213,24 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
         45: "FIGHT_PROP_ROCK_ADD_HURT",
         46: "FIGHT_PROP_ICE_ADD_HURT",
         26: "FIGHT_PROP_HEAL_ADD",  # 治疗
+        40: "FIGHT_PROP_FIRE_ADD_HURT",
     }
     times = 0
-    for fight_prop_id, fight_prop_name in addition_props.items():
-        if fight_prop[str(fight_prop_id)] > 0:
-            times += 1
-            prop_dict[fight_prop_name] = {
-                "type": "percent",
-                "accuracy": 1,
-                "value": fight_prop[str(fight_prop_id)]
-            }
-        if times >= 3:
-            break
+
+    max_value = max([fight_prop[str(fight_prop_id)] for fight_prop_id in addition_props])
+    for t_i in range(len(addition_props)):
+        for fight_prop_id, fight_prop_name in copy.deepcopy(addition_props).items():
+            if fight_prop[str(fight_prop_id)] == max_value and max_value > 0:
+                times += 1
+                prop_dict[fight_prop_name] = {
+                    "type": "percent",
+                    "accuracy": 1,
+                    "value": fight_prop[str(fight_prop_id)]
+                }
+                del addition_props[fight_prop_id]
+            max_value = max([fight_prop[str(fight_prop_id)] for fight_prop_id in addition_props])
+            if times >= 3 or max_value == 0:
+                break
 
     try:
         # 名称 等级 好感度
@@ -364,7 +371,7 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
         """武器贴图缓存检测"""
         await run_sync(enka_resource_detect)(weapon["flat"]["icon"])
         """武器贴图"""
-        canvas.part_2.weapon_icon = Img(uv_size=(1, 1), box_size=(0.54, 0.25), parent_point=(start_line_x, 0.02),
+        canvas.part_2.weapon_icon = Img(uv_size=(1, 1), box_size=(0.54, 0.25), parent_point=(start_line_x, 0.04),
                                         point=(0, 0), img=Image.open(os.path.join(Path.cache, "genshin", "%s.png" % weapon["flat"]["icon"])))
         """武器贴图位置"""
         weapon_pos = await run_sync(canvas.get_parent_box)("part_2.weapon_icon")
@@ -373,7 +380,7 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
             point=(0.5, 0.5), img=Image.open(os.path.join(Path.res, "textures/genshin/weapon_bar_star_%s.png" % star))
         )
         """武器名"""
-        canvas.part_2.weapon_name = Text(uv_size=(1, 1), box_size=(0.6, 0.05), parent_point=(weapon_pos[2] + 0.06, weapon_pos[1] + 0.03),
+        canvas.part_2.weapon_name = Text(uv_size=(1, 1), box_size=(0.6, 0.05), parent_point=(weapon_pos[2] + 0.06, weapon_pos[1]),
                                          point=(0, 0), text=get_lang_word(weapon["flat"]["nameTextMapHash"], lang, loc=file_pool["loc.json"]), font=hywh_font)
 
         """武器星级"""
@@ -423,7 +430,7 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
                                                 text="R%s" % (refine + 1),
                                                 font=hywh_font, force_size=True, color=Color.hex2dec("FFFFEE00" if refine == 4 else "FFFFFFFF"))
         line = 0
-        prop_line_distance = 0.055
+        prop_line_distance = 0.053
         prop_start_y = weapon_pos[3] + 0.04
         alpha = 80
         """角色详细属性部分"""
@@ -506,7 +513,8 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
             canvas.draw_line(f"part_3.artifact_{artifact_i}", p1=(0.48, 0.9), p2=(0.95, 0.9), color=(80, 80, 80, 255), width=3)
             canvas.draw_line(f"part_3.artifact_{artifact_i}", p1=(0.45, 0.5), p2=(0.25, 0.5), color=(80, 80, 80, 255), width=3)
             artifact_bg.level = Text(uv_size=(1, 1), box_size=(0.5, 0.18), parent_point=(0.33, 0.17),
-                                     point=(0, 0), text=" +" + str(artifact["reliquary"]["level"] - 1), font=hywh_font, force_size=True, fillet=5, fill=(255, 255, 255, 60), rectangle_side=2)
+                                     point=(0, 0), text=" +" + str(artifact["reliquary"]["level"] - 1), font=hywh_font, force_size=True, fillet=5, fill=(255, 255, 255, 60),
+                                     rectangle_side=2)
             x10 = 0.5
             y10 = 0.19
             dx = 0.25

@@ -551,7 +551,7 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
                 artifact_set_words.append(sets)
 
         set_word = canvas.part_2.artifact_set_info = Panel(
-            uv_size=(1, 1), box_size=(1, 0.15), parent_point=(0.5, clamp(prop_base_pos_on_parent[3] + 0.01, 0.8, 1)), point=(0.5, 0)
+            uv_size=(1, 1), box_size=(1, 0.15), parent_point=(0.5, clamp(prop_base_pos_on_parent[3] + 0.01, 0.85, 1)), point=(0.5, 0)
         )
         for w_i, word in enumerate(artifact_set_words):
             set_word.__dict__["text_%s" % w_i] = Text(

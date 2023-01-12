@@ -364,6 +364,12 @@ def generate_weather_now(location: Location, weather_now: WeatherNow, weather_ho
             parent_point=(0.5, 0.5), point=(0.5, 0.5), img=Graphical.rectangle(size=ad_panel_size, fillet=base_fillet,
                                                                                img=ad_img)
         )
+        ad_name = f'  {".".join(os.path.basename(ad_img_path).replace("#", "").split(".")[0:-1])}  '
+        ad_panel.ad_img.text = Text(
+            uv_size=(1, 1), box_size=(1, 0.12),
+            parent_point=(0, 1), point=(0, 1), text=ad_name,
+            fillet=base_fillet, fill=base_cover, dp=1
+        )
 
     # 轻雪最后签名
     canvas.signature = Text(

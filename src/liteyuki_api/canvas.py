@@ -239,13 +239,14 @@ class TextSegment:
 
 class Text(BasePanel):
     def __init__(self, uv_size, box_size, parent_point, point, text: Union[str, list], font=os.path.join(Path.res, Font.MiSans_Medium), color=(255, 255, 255, 255), vertical=False,
-                 line_feed=False, force_size=False, fill=(0, 0, 0, 0), fillet=0, outline=(0, 0, 0, 0), outline_width=0, font_size=None, dp: int = 5, anchor: str = "la"):
+                 line_feed=False, force_size=False, fill=(0, 0, 0, 0), fillet=0, outline=(0, 0, 0, 0), outline_width=0, rectangle_side=0, font_size=None, dp: int = 5,
+                 anchor: str = "la"):
         """
         :param uv_size:
         :param box_size:
         :param parent_point:
         :param point:
-        :param text: list[{"text": "A", "color":(200,200,200,200)}]
+        :param text: list[TextSegment] | str
         :param font:
         :param color:
         :param vertical: 是否竖直
@@ -255,9 +256,11 @@ class Text(BasePanel):
         :param anchor : https://www.zhihu.com/question/474216280
         :param fill: 底部填充颜色
         :param fillet: 填充圆角
+        :param rectangle_side: 边框宽度
         :param outline: 填充矩形边框颜色
         :param outline_width: 填充矩形边框宽度
         """
+        self.actual_pos = None
         self.outline_width = outline_width
         self.outline = outline
         self.fill = fill
@@ -270,6 +273,7 @@ class Text(BasePanel):
         self.line_feed = line_feed
         self.dp = dp
         self.font_size = font_size
+        self.rectangle_side = rectangle_side
         self.anchor = anchor
         super(Text, self).__init__(uv_size, box_size, parent_point, point)
 
@@ -316,9 +320,15 @@ class Text(BasePanel):
                     text_segment.font = self.font
                 image_font = ImageFont.truetype(font=text_segment.font, size=font_size)
                 if self.fill[-1] > 0:
-                    rectangle = Graphical.rectangle(size=actual_size, fillet=self.fillet, color=self.fill, outline_width=self.outline_width, outline_color=self.outline)
-                    self.canvas.base_img.paste(im=rectangle, box=(start_point[0], start_point[1], start_point[0] + actual_size[0], start_point[1] + actual_size[1]), mask=rectangle.split()[-1])
-                draw.text(start_point, text_segment.text, text_segment.color, font=image_font, anchor=self.anchor)
+                    rectangle = Graphical.rectangle(size=(actual_size[0] + 2 * self.rectangle_side, actual_size[1] + 2 * self.rectangle_side), fillet=self.fillet, color=self.fill,
+                                                    outline_width=self.outline_width, outline_color=self.outline)
+                    self.canvas.base_img.paste(im=rectangle, box=(start_point[0] - self.rectangle_side,
+                                                                  start_point[1] - self.rectangle_side,
+                                                                  start_point[0] + actual_size[0] + self.rectangle_side,
+                                                                  start_point[1] + actual_size[1] + self.rectangle_side),
+                                               mask=rectangle.split()[-1])
+                draw.text((start_point[0] - self.rectangle_side, start_point[1] - self.rectangle_side),
+                          text_segment.text, text_segment.color, font=image_font, anchor=self.anchor)
                 text_width = image_font.getsize(text_segment.text)
                 start_point[0] += text_width[0]
 
@@ -406,7 +416,8 @@ class Rectangle(Img):
                         int(self.canvas.base_img.size[1] * (self.canvas_box[3] - self.canvas_box[1])))
         if not self.keep_ratio and self.img_base_img is not None and self.img_base_img.size[0] / self.img_base_img.size[1] != limited_size[0] / limited_size[1]:
             self.img_base_img = self.img_base_img.resize(limited_size)
-        self.img_base_img = Graphical.rectangle(size=limited_size, fillet=self.fillet, color=self.color, outline_width=self.outline_width, outline_color=self.outline_color, img=self.img_base_img)
+        self.img_base_img = Graphical.rectangle(size=limited_size, fillet=self.fillet, color=self.color, outline_width=self.outline_width, outline_color=self.outline_color,
+                                                img=self.img_base_img)
 
 
 class Color:
@@ -478,8 +489,6 @@ class Graphical:
             base = Utils.central_clip_by_ratio(base, size, use_cache=False)
             base.putalpha(alpha_cover.split()[-1])
             return base
-
-
 
     @staticmethod
     def arc(radius: int, start, end, color=(255, 255, 255, 255), width=1) -> Image.Image:

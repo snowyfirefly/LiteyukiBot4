@@ -259,6 +259,7 @@ async def _(arg: Message = CommandArg()):
             if searched_plugin.name in installed_plugin:
                 installed_plugin.remove(searched_plugin.name)
                 await run_sync(os.system)(f"pip uninstall {searched_plugin.name} -y")
+                suc = True
                 await uninstall_plugin.send(f"{searched_plugin.metadata.name}({searched_plugin.name})卸载成功")
             else:
                 await uninstall_plugin.send(f"{searched_plugin.metadata.name}({searched_plugin.name})卸载失败：轻雪插件和手动安装的插件不可被卸载")

@@ -1,6 +1,7 @@
 import json
 import time
 import traceback
+import random
 from typing import Type
 
 import aiohttp
@@ -545,6 +546,22 @@ async def character_card_handle(bot: Bot, event: Union[GroupMessageEvent, Privat
         set_word.flower = Img(uv_size=(1, 1), box_size=(0.8, 0.8),
                               parent_point=(0.04, 0.5), point=(0, 0.5),
                               img=Image.open(os.path.join(Path.res, "textures", "genshin", "flower.png")))
+        ad_panel = canvas.part_3.ad_part = Rectangle(
+            uv_size=(1, 1), box_size=(1, 0.1428), parent_point=(0.5, y0 + artifact_distance * (artifact_i + 1)), point=(0.5, 0),
+            color=(0, 0, 0, 80), fillet=base_fillet
+        )
+        ad_panel_size = canvas.get_actual_pixel_size("part_3.ad_part")
+        ad_path = os.path.join(Path.data, "liteyuki/ads")
+
+        if len(os.listdir(ad_path)) > 0:
+            ad_img_path = os.path.join(ad_path, random.choice(os.listdir(ad_path)))
+            ad_img = Image.open(ad_img_path)
+            ad_panel.ad_img = Img(
+                uv_size=(1, 1), box_size=(1, 1),
+                parent_point=(0.5, 0.5), point=(0.5, 0.5), img=Graphical.rectangle(size=ad_panel_size, fillet=base_fillet,
+                                                                                   img=ad_img)
+            )
+
         times = "%s-%s-%s %s:%s" % tuple(player_data.get("time", list(time.localtime())[0:5]))
         canvas.player_info = Text(uv_size=(1, 1), box_size=(0.5, 0.025),
                                   parent_point=(0.99, 0.99),

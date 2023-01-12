@@ -107,7 +107,7 @@ async def _(bot: Bot, event: Union[GroupMessageEvent, PrivateMessageEvent]):
     delta_sec = delta_time.days * 24 * 60 * 60 + delta_time.seconds
     prop_list = [
         [
-            f"{protocol_name}在线"
+            f"{protocol_name}在线",
             f"群 {len(await bot.get_group_list())}",
             f"好友 {len(await bot.get_friend_list())}",
             f"插件 {len(get_loaded_plugins())}"

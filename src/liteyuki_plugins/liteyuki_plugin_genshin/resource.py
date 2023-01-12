@@ -147,6 +147,11 @@ resource_git = {
     "src/resource/textures/genshin/香菱.png": "snowyfirefly/Liteyuki-Resource/raw/master/textures/genshin/香菱.png",
     "src/resource/textures/genshin/魈.png": "snowyfirefly/Liteyuki-Resource/raw/master/textures/genshin/魈.png",
     "src/resource/textures/genshin/鹿野院平藏.png": "snowyfirefly/Liteyuki-Resource/raw/master/textures/genshin/鹿野院平藏.png",
+    "src/resource/textures/genshin/EQUIP_BRACER.png": "snowyfirefly/Liteyuki-Resource/raw/master/textures/genshin/EQUIP_BRACER.png",
+    "src/resource/textures/genshin/EQUIP_DRESS.png": "snowyfirefly/Liteyuki-Resource/raw/master/textures/genshin/EQUIP_DRESS.png",
+    "src/resource/textures/genshin/EQUIP_NECKLACE.png": "snowyfirefly/Liteyuki-Resource/raw/master/textures/genshin/EQUIP_NECKLACE.png",
+    "src/resource/textures/genshin/EQUIP_RING.png": "snowyfirefly/Liteyuki-Resource/raw/master/textures/genshin/EQUIP_RING.png",
+    "src/resource/textures/genshin/EQUIP_SHOES.png": "snowyfirefly/Liteyuki-Resource/raw/master/textures/genshin/EQUIP_SHOES.png",
 }
 resource = {
 
